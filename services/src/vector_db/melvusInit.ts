@@ -1,12 +1,22 @@
 import { MilvusClient, DataType } from '@zilliz/milvus2-sdk-node';
 
-const address = `${process.env['milvus-url']}:${process.env['milvus-port']}`;
-// const username = 'your-milvus-username'; // optional username
-// const password = 'your-milvus-password'; // optional password
-const ssl = false; // secure or not
+let milvusClient: MilvusClient | undefined;
 
-// connect to milvus
-export const client = new MilvusClient({ address, ssl });
+export const getMilvusClient = () => {
+  if (!milvusClient) {
+    const address = `${process.env.MILVUS_URL}:${process.env.MILVUS_PORT}`;
+    // const username = 'your-milvus-username'; // optional username
+    // const password = 'your-milvus-password'; // optional password
+    const ssl = false; // secure or not
+
+    milvusClient = new MilvusClient({
+      address,
+      ssl,
+    });
+  }
+
+  return milvusClient;
+};
 
 const SCHEMA_ENTRIES = [
   {
@@ -26,6 +36,9 @@ const SCHEMA_ENTRIES = [
         data_type: DataType.FloatVector,
         is_primary_key: false,
         autoId: false,
+        type_params: {
+          dim: 1536, // The number of dimensions of the ada-2 embedding model
+        },
       },
       {
         name: 'content_chunk_original',
@@ -39,6 +52,8 @@ const SCHEMA_ENTRIES = [
 ];
 
 export const createSchema = async () => {
+  const client = getMilvusClient();
+
   SCHEMA_ENTRIES.forEach(async ({ collection_name, description, fields }) => {
     await client.createCollection({
       collection_name,
@@ -49,10 +64,15 @@ export const createSchema = async () => {
 };
 
 export const cleanStart = async () => {
+  const client = getMilvusClient();
+
   const collections = await client.listCollections();
+
   const collection_names = collections?.data.map((c) => c.name);
+
   collection_names.forEach(async (collection_name: string) => {
     await client.dropCollection({ collection_name });
   });
+
   await createSchema();
 };

@@ -1,5 +1,3 @@
-import { Request, Response, NextFunction } from 'express';
+import express from 'express';
 
-export function appMiddleware(req: Request, res: Response, next: NextFunction) {
-  next();
-}
+export const appRouter = express.Router();

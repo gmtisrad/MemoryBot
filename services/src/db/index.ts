@@ -1,5 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import express from 'express';
+import { getDb } from './mongoInit';
 
-export function dbMiddleware(req: Request, res: Response, next: NextFunction) {
-  next();
-}
+export const dbRouter = express.Router();
+
+export const createEntry = async () => {
+  const mongoDB = await getDb();
+};
