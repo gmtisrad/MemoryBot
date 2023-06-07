@@ -1,24 +1,33 @@
 import express from 'express';
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import multer from 'multer';
-import multerS3 from 'multer-s3';
 import { Readable } from 'stream';
-import { TokenTextSplitter } from 'langchain/text_splitter';
-import fs from 'fs';
 
+let _s3Config: S3Client | undefined;
 let _upload: multer.Multer | undefined;
+
+function getS3Config() {
+  if (!_s3Config) {
+    _s3Config = new S3Client({
+      region: 'us-west-2',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+      },
+    });
+  }
+
+  return _s3Config;
+}
 
 function getUpload() {
   if (!_upload) {
     _upload = multer({
-      storage: multer.diskStorage({
-        destination: function (req, file, cb) {
-          cb(null, '/tmp/my-uploads');
-        },
-        filename: function (req, file, cb) {
-          cb(null, file.fieldname + '-' + Date.now());
-        },
-      }),
+      storage: multer.memoryStorage(),
     });
   }
 
@@ -32,45 +41,35 @@ filesRouter.post(
   getUpload().single('file'),
   async (req, res, next) => {
     try {
-      // req.file is the file object. path contains the path of the uploaded file
+      // req.file is the file object. buffer contains the file data
       const originalFile = req.file;
+      const originalBuffer = originalFile?.buffer;
 
-      // Here, perform operations on the originalFile
+      const stringifiedFile = originalBuffer?.toString('utf-8');
 
-      // Once done, read the local file
-      const fileContent = fs.readFileSync(originalFile.path);
+      console.log({ originalFile });
 
-      // Configure S3 upload parameters
+      // Here, perform operations on the originalBuffer
+      // Example: const processedBuffer = performOperation(originalBuffer);
+
+      // Once done, prepare the file for S3 upload
       const params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `${Date.now().toString()}-${originalFile.originalname}`,
-        Body: fileContent,
+        Key: `${originalFile?.originalname}`,
+        Body: originalBuffer, // Replace this with processedBuffer if you made changes to the buffer
       };
 
       // Upload the file to S3
       const s3Client = getS3Config();
-      const result = await s3Client.send(new PutObjectCommand(params));
-      const fileUrl = `https://${params.Bucket}.s3.${s3Client.config.region}.amazonaws.com/${params.Key}`;
+      await s3Client.send(new PutObjectCommand(params));
 
-      // delete the file after upload
-      fs.unlinkSync(originalFile.path);
+      const fileUrl = `https://${params.Bucket}.s3.${s3Client.config.region}.amazonaws.com/${params.Key}`;
 
       // Respond with URL
       res.json({ fileUrl });
     } catch (error) {
       next(error);
     }
-  },
-);
-
-filesRouter.post(
-  '/upload',
-  async (req, res, next) => {
-    getUpload().single('file')(req, res, next);
-  },
-  (req, res) => {
-    // TODO: Fix types
-    res.json({ fileUrl: (req?.file as unknown as any)?.location });
   },
 );
 
