@@ -59,6 +59,24 @@ export const createEmbedding = async (text: string) => {
   return embedding?.data?.data[0];
 };
 
+export const createEmbeddings = async (textArray: string[]) => {
+  const openAiClient = await getOpenAiClient();
+
+  let embedding;
+
+  try {
+    embedding = await openAiClient?.createEmbedding({
+      model: process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-ada-002',
+      input: textArray,
+    });
+  } catch (error: any) {
+    console.log({ message: error.message });
+  }
+
+  console.log({ usage: embedding?.data?.usage });
+  return embedding?.data?.data;
+};
+
 export const embeddingRouter = express.Router();
 
 embeddingRouter.post('/create', async (req, res) => {

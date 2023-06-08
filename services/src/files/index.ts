@@ -6,6 +6,10 @@ import {
 } from '@aws-sdk/client-s3';
 import multer from 'multer';
 import { Readable } from 'stream';
+import pdfParse from 'pdf-parse';
+import { TokenTextSplitter } from 'langchain/text_splitter';
+import { createEmbeddings } from '../embedding';
+import { insertDocumentsEntry } from '../vector_db';
 
 let _s3Config: S3Client | undefined;
 let _upload: multer.Multer | undefined;
@@ -35,38 +39,112 @@ function getUpload() {
 }
 
 export const filesRouter = express.Router();
+import path from 'path';
+
+// A function to handle PDF files.
+async function handlePDF(buffer: Buffer) {
+  // Parse the PDF and convert it to text
+  const data = await pdfParse(buffer);
+  console.log('PDF Loaded Successfully');
+
+  const text = data.text.replace(/\.{3,}/g, '').replace(/\n/g, ' ');
+  console.log('Text Stripped Successfully');
+
+  return text;
+}
+
+// This will handle any utf-8 buffers
+async function handlePlaintext(buffer: Buffer) {
+  const text = buffer
+    .toString('utf-8')
+    .replace(/\.{3,}/g, '')
+    .replace(/\n/g, ' ');
+
+  return text;
+}
 
 filesRouter.post(
   '/upload',
   getUpload().single('file'),
   async (req, res, next) => {
     try {
-      // req.file is the file object. buffer contains the file data
       const originalFile = req.file;
       const originalBuffer = originalFile?.buffer;
 
-      const stringifiedFile = originalBuffer?.toString('utf-8');
+      if (!originalBuffer) {
+        res.status(400).send('No file uploaded.');
+        return;
+      }
 
-      console.log({ originalFile });
-
-      // Here, perform operations on the originalBuffer
-      // Example: const processedBuffer = performOperation(originalBuffer);
-
-      // Once done, prepare the file for S3 upload
       const params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `${originalFile?.originalname}`,
-        Body: originalBuffer, // Replace this with processedBuffer if you made changes to the buffer
+        Key: `/users/gtimm/exampleCase/${originalFile?.originalname}`,
+        Body: originalBuffer,
       };
 
-      // Upload the file to S3
       const s3Client = getS3Config();
-      await s3Client.send(new PutObjectCommand(params));
 
-      const fileUrl = `https://${params.Bucket}.s3.${s3Client.config.region}.amazonaws.com/${params.Key}`;
+      const result = await s3Client.send(new PutObjectCommand(params));
 
-      // Respond with URL
-      res.json({ fileUrl });
+      if (result['$metadata'].httpStatusCode !== 200) {
+        res.status(500).send('Error uploading the file.');
+        return;
+      }
+
+      console.log('Uploaded to S3 Successfully');
+
+      // Determine the file type based on its extension
+      const extension = path.extname(originalFile.originalname).toLowerCase();
+
+      let text;
+
+      // Call the appropriate function based on the file type
+      if (extension === '.pdf') {
+        text = await handlePDF(originalBuffer);
+      } else {
+        text = await handlePlaintext(originalBuffer);
+      }
+      const splitter = new TokenTextSplitter({
+        chunkSize: 512,
+        chunkOverlap: 128,
+      });
+      console.log('Text Splitter Created Successfully');
+
+      const chunks = await splitter.createDocuments([text]);
+      console.log('Text Chunked Successfully');
+
+      // console.log({ output: chunks[0].pageContent });
+
+      const embeddings = await createEmbeddings(
+        chunks.map((chunk) => chunk.pageContent).slice(0),
+      );
+      console.log('Embeddings Created Successfully');
+
+      if (!embeddings || !embeddings.length) {
+        res.status(500).send('Error creating the embeddings.');
+        return;
+      }
+
+      // console.log({ embeddings });
+
+      await insertDocumentsEntry({
+        entries: embeddings.map((embedding, index) => ({
+          documentChunkEmbedding: embedding.embedding,
+          documentChunkOriginal: chunks[index].pageContent,
+        })),
+      });
+      console.log('Documents Inserted Into Milvus Successfully');
+
+      // console.log({
+      //   output: output[0],
+      //   metadata: output[0].metadata.loc.lines,
+      // });
+
+      const region = await s3Client.config.region();
+
+      const fileUrl = `https://${params.Bucket}.s3.${region}.amazonaws.com/${params.Key}`;
+
+      res.json({ fileUrl, result });
     } catch (error) {
       next(error);
     }
@@ -90,7 +168,6 @@ filesRouter.get('/download', async (req, res) => {
   }
 });
 
-// Helper function to convert a stream to a buffer
 function streamToBuffer(readableStream: Readable): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: any[] = [];

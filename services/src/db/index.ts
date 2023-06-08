@@ -6,14 +6,14 @@ import { ObjectId } from 'mongodb';
 
 export const dbRouter = express.Router();
 
-interface IInsertDocumentEntryArgs {
+interface IInsertVectorDocumentEntryArgs {
   documentChunkEmbedding: DataType.FloatVector;
   documentChunkOriginal: string;
   vectorDBId: DataType.Int64;
 }
 
-export const insertDocumentEntry: (
-  args: IInsertDocumentEntryArgs,
+export const insertVectorDocumentEntry: (
+  args: IInsertVectorDocumentEntryArgs,
 ) => any = async ({
   documentChunkEmbedding,
   documentChunkOriginal,
@@ -35,11 +35,11 @@ export const insertDocumentEntry: (
   return { acknowledged, insertedId };
 };
 
-dbRouter.post('/insert', async (req, res) => {
+dbRouter.post('/insertVector', async (req, res) => {
   const { documentChunkEmbedding, documentChunkOriginal, vectorDBId } =
     req.body;
 
-  const { acknowledged, insertedId } = await insertDocumentEntry({
+  const { acknowledged, insertedId } = await insertVectorDocumentEntry({
     documentChunkEmbedding,
     documentChunkOriginal,
     vectorDBId,

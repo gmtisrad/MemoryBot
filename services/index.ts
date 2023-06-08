@@ -9,6 +9,8 @@ import { embeddingRouter } from './src/embedding';
 import { cleanStart as milvusCleanStart } from './src/vector_db/milvusInit';
 import { cleanStart as mongoCleanStart } from './src/db/mongoInit';
 
+const PORT = 3000;
+
 (async () => {
   const app = express();
 
@@ -36,5 +38,5 @@ import { cleanStart as mongoCleanStart } from './src/db/mongoInit';
     res.send('Hello World!');
   });
 
-  app.listen('8081');
+  app.listen(PORT, () => console.log(`Listening on port: ${PORT}`));
 })();
