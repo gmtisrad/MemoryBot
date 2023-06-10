@@ -55,7 +55,6 @@ export const createEmbedding = async (text: string) => {
     console.log({ message: error.message });
   }
 
-  // console.log({ usage: embedding?.data?.usage });
   return embedding?.data?.data[0];
 };
 
@@ -73,7 +72,6 @@ export const createEmbeddings = async (textArray: string[]) => {
     console.log({ message: error.message });
   }
 
-  console.log({ usage: embedding?.data?.usage });
   return embedding?.data?.data;
 };
 

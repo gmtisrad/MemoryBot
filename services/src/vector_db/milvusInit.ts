@@ -64,6 +64,8 @@ export const createSchema = async () => {
       });
 
       if (error_code !== 'Success') {
+        console.log({ error_code, reason });
+
         throw new Error(
           `Failed to create collection ${collection_name} - ${error_code} - ${reason}`,
         );
@@ -87,8 +89,6 @@ export const createSchema = async () => {
     extra_params: index_params,
   });
 
-  // console.log({ createdIndex });
-
   const collections = await client.listCollections();
 
   return collections;
@@ -99,13 +99,10 @@ export const cleanStart = async () => {
 
   const collections = await client.listCollections();
 
-  // console.log({ collections });
-
   const collection_names = collections?.data.map((c) => c.name);
 
   await Promise.all(
     collection_names.map(async (collection_name: string) => {
-      // console.log({ collection_name });
       await client.dropCollection({ collection_name });
     }),
   );

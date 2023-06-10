@@ -22,7 +22,7 @@ export const getDb = async () => {
   return _db;
 };
 
-const COLLECTIONS = ['documents'];
+const COLLECTIONS = ['documents', 'cases', 'folders', 'users'];
 
 export const createCollections = async () => {
   const db = await getDb();

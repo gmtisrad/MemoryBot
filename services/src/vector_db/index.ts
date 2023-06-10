@@ -107,8 +107,6 @@ export const similaritySearch: (args: ISimilaritySearchArgs) => any = async ({
       vector_type: 101, // DataType.FloatVector
     });
 
-    // console.log({ searchResponse });
-
     // Release the collection after the search has completed.
     await client.releaseCollection({ collection_name: 'documents' });
   } catch (error: any) {

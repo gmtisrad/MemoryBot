@@ -40,17 +40,28 @@ function getUpload() {
 
 export const filesRouter = express.Router();
 import path from 'path';
+import mammoth from 'mammoth';
+import { getCaseDocuments, getDocumentEntry, insertDocumentEntry } from '../db';
+import { getDb } from '../db/mongoInit';
 
 // A function to handle PDF files.
 async function handlePDF(buffer: Buffer) {
   // Parse the PDF and convert it to text
   const data = await pdfParse(buffer);
-  console.log('PDF Loaded Successfully');
 
   const text = data.text.replace(/\.{3,}/g, '').replace(/\n/g, ' ');
-  console.log('Text Stripped Successfully');
 
   return text;
+}
+
+// A function to handle DOCX files.
+async function handleDOCX(buffer: Buffer) {
+  // Parse the docx and convert it to text
+  const text = await mammoth.extractRawText({ buffer: buffer });
+  // Process the text as you like
+  const processedText = text.value.replace(/\.{3,}/g, '').replace(/\n/g, ' ');
+
+  return processedText;
 }
 
 // This will handle any utf-8 buffers
@@ -67,6 +78,7 @@ filesRouter.post(
   '/upload',
   getUpload().single('file'),
   async (req, res, next) => {
+    const { title, date, description, userId, folderId, caseId } = req.body;
     try {
       const originalFile = req.file;
       const originalBuffer = originalFile?.buffer;
@@ -78,7 +90,7 @@ filesRouter.post(
 
       const params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `/users/gtimm/exampleCase/${originalFile?.originalname}`,
+        Key: `users/${userId}/${caseId}/${folderId}/${originalFile?.originalname}`,
         Body: originalBuffer,
       };
 
@@ -91,8 +103,6 @@ filesRouter.post(
         return;
       }
 
-      console.log('Uploaded to S3 Successfully');
-
       // Determine the file type based on its extension
       const extension = path.extname(originalFile.originalname).toLowerCase();
 
@@ -101,55 +111,104 @@ filesRouter.post(
       // Call the appropriate function based on the file type
       if (extension === '.pdf') {
         text = await handlePDF(originalBuffer);
+      } else if (extension === '.docx') {
+        text = await handleDOCX(originalBuffer);
       } else {
         text = await handlePlaintext(originalBuffer);
       }
+
       const splitter = new TokenTextSplitter({
         chunkSize: 512,
         chunkOverlap: 128,
       });
-      console.log('Text Splitter Created Successfully');
 
       const chunks = await splitter.createDocuments([text]);
-      console.log('Text Chunked Successfully');
 
-      // console.log({ output: chunks[0].pageContent });
-
-      const embeddings = await createEmbeddings(
-        chunks.map((chunk) => chunk.pageContent).slice(0),
+      const contextualizedChunks = chunks.map(
+        (chunk) =>
+          `Title: ${title}\nDate: ${new Date(
+            date,
+          ).toString()}\nDescription: ${description}\nText: ${
+            chunk.pageContent
+          }`,
       );
-      console.log('Embeddings Created Successfully');
+
+      const embeddings = await createEmbeddings(contextualizedChunks.slice(0));
 
       if (!embeddings || !embeddings.length) {
         res.status(500).send('Error creating the embeddings.');
         return;
       }
 
-      // console.log({ embeddings });
-
       await insertDocumentsEntry({
         entries: embeddings.map((embedding, index) => ({
           documentChunkEmbedding: embedding.embedding,
-          documentChunkOriginal: chunks[index].pageContent,
+          documentChunkOriginal: contextualizedChunks[index],
         })),
       });
-      console.log('Documents Inserted Into Milvus Successfully');
-
-      // console.log({
-      //   output: output[0],
-      //   metadata: output[0].metadata.loc.lines,
-      // });
 
       const region = await s3Client.config.region();
 
       const fileUrl = `https://${params.Bucket}.s3.${region}.amazonaws.com/${params.Key}`;
 
-      res.json({ fileUrl, result });
+      insertDocumentEntry({
+        documentName: originalFile?.originalname,
+        caseId,
+        folderId,
+        title,
+        documentDate: date,
+        uploadedBy: userId,
+        description,
+        s3Url: fileUrl,
+      });
+
+      res.json({ fileUrl, text });
     } catch (error) {
       next(error);
     }
   },
 );
+
+filesRouter.get(
+  '/documents/:userId/:caseId/:folderId/:documentName',
+  async (req, res) => {
+    const { userId, caseId, folderId, documentName } = req.params;
+
+    let document;
+
+    try {
+      document = await getDocumentEntry({
+        userId,
+        caseId,
+        folderId,
+        documentName,
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send('Error retrieving the document.');
+    }
+
+    res.json({ document });
+  },
+);
+
+filesRouter.get('/documents/:userId/:caseId', async (req, res) => {
+  const { userId, caseId } = req.params;
+
+  let documents;
+
+  try {
+    documents = await getCaseDocuments({
+      userId,
+      caseId,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send('Error retrieving the document.');
+  }
+
+  res.json({ documents });
+});
 
 filesRouter.get('/download', async (req, res) => {
   const filename = req.query.filename as string;
