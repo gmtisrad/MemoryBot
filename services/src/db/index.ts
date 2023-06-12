@@ -7,7 +7,7 @@ import { ObjectId } from 'mongodb';
 export const dbRouter = express.Router();
 
 interface IInsertDocumentEntryArgs {
-  documentName: string;
+  name: string;
   uploadedBy: string;
   documentDate: string;
   description: string;
@@ -20,7 +20,7 @@ interface IInsertDocumentEntryArgs {
 export const insertDocumentEntry: (
   args: IInsertDocumentEntryArgs,
 ) => any = async ({
-  documentName,
+  name,
   documentDate,
   uploadedBy,
   description,
@@ -35,38 +35,45 @@ export const insertDocumentEntry: (
     .collection('documents')
     .insertOne({
       uploadedDate: Date.now(),
-      documentName,
+      name,
       documentDate,
       uploadedBy,
       description,
       s3Url,
-      folderId,
-      caseId,
+      folderId: folderId ? new ObjectId(folderId) : null,
+      caseId: new ObjectId(caseId),
       title,
     });
+
+  await mongoDB
+    .collection('cases')
+    .updateOne(
+      { _id: new ObjectId(caseId) },
+      { $push: { documents: insertedId } },
+    );
 
   return { acknowledged, insertedId };
 };
 
 interface IGetDocumentEntryArgs {
-  documentName: string;
-  folderName: string;
-  caseName: string;
+  name: string;
+  folderId: string;
+  caseId: string;
   userId: string;
 }
 
 export const getDocumentEntry: (args: IGetDocumentEntryArgs) => any = async ({
-  documentName,
-  folderName,
-  caseName,
+  name,
+  folderId,
+  caseId,
   userId,
 }) => {
   const mongoDB = await getDb();
 
   const mongoRes = await mongoDB.collection('documents').findOne({
-    documentName,
-    folderName,
-    caseName,
+    name,
+    folderId,
+    caseId,
     uploadedBy: userId,
   });
 
@@ -74,12 +81,12 @@ export const getDocumentEntry: (args: IGetDocumentEntryArgs) => any = async ({
 };
 
 interface IGetCaseDocumentsArgs {
-  caseName: string;
+  caseId: string;
   userId: string;
 }
 
 export const getCaseDocuments: (args: IGetCaseDocumentsArgs) => any = async ({
-  caseName,
+  caseId,
   userId,
 }) => {
   const mongoDB = await getDb();
@@ -87,7 +94,7 @@ export const getCaseDocuments: (args: IGetCaseDocumentsArgs) => any = async ({
   const mongoRes = await mongoDB
     .collection('documents')
     .find({
-      caseName,
+      caseId,
       uploadedBy: userId,
     })
     .toArray();
@@ -157,6 +164,7 @@ export const createCase: (args: ICreateCaseArgs) => any = async ({
       name: caseName,
       userId: new ObjectId(userId),
       folders: [],
+      documents: [],
     });
 
   return { acknowledged, insertedId };
@@ -177,7 +185,11 @@ export const createCaseFolder: (args: ICreateCaseFolderArgs) => any = async ({
 
   const { acknowledged: folderInsertAcknowledged, insertedId } = await mongoDB
     .collection('folders')
-    .insertOne({ name: folderName, parent, caseId: new ObjectId(caseId) });
+    .insertOne({
+      name: folderName,
+      parent,
+      caseId: new ObjectId(caseId),
+    });
 
   const caseQuery = { _id: new ObjectId(caseId) };
 
@@ -218,10 +230,12 @@ export const getUserCases: (args: IGetUserCasesArgs) => any = async ({
 
 interface IStructureFoldersArgs {
   folders: any[];
+  documents: any[];
 }
 
 export const structureFolders: (args: IStructureFoldersArgs) => any = ({
   folders,
+  documents,
 }) => {
   // Create a lookup for folders by their id
   const foldersById: Record<string, any> = {};
@@ -229,9 +243,23 @@ export const structureFolders: (args: IStructureFoldersArgs) => any = ({
     foldersById[folder._id.toString()] = { ...folder, folders: [] };
   });
 
+  // Create a lookup for documents by their folderIds
+  const documentsByFolderId: Record<string, any> = {};
+  documents.forEach((document) => {
+    if (document.folderId !== null) {
+      documentsByFolderId[document.folderId.toString()] = [
+        ...(documentsByFolderId[document.folderId.toString()] || []),
+        document,
+      ];
+    }
+  });
+
   // Iterate over the folders and build the hierarchy
   folders.forEach((folder) => {
+    foldersById[folder._id.toString()].documents =
+      documentsByFolderId[folder._id.toString()] || [];
     if (folder.parent !== null) {
+      // Add documents to the subFolder
       // If the folder has a parent, add it to the parent's "folders" array
       foldersById[folder.parent].folders.push(
         foldersById[folder._id.toString()],
@@ -244,8 +272,6 @@ export const structureFolders: (args: IStructureFoldersArgs) => any = ({
     (folder) => folder.parent === null,
   );
 
-  console.log({ folders, rootFolders });
-
   return rootFolders;
 };
 
@@ -256,24 +282,36 @@ interface IGetCaseArgs {
 export const getCase: (args: IGetCaseArgs) => any = async ({ caseId }) => {
   const mongoDB = await getDb();
 
-  const casesRes = await mongoDB
-    .collection('cases')
-    .find({
-      _id: new ObjectId(caseId),
-    })
-    .toArray();
+  const caseRes = await mongoDB.collection('cases').findOne({
+    _id: new ObjectId(caseId),
+  });
+
+  if (!caseRes) {
+    throw new Error('Case not found');
+  }
 
   const foldersRes = await mongoDB
     .collection('folders')
     .find({ caseId: caseId })
     .toArray();
 
-  const rootFolders = structureFolders({ folders: foldersRes });
+  const caseDocuments = await mongoDB
+    .collection('documents')
+    .find({ _id: { $in: caseRes?.documents } })
+    .toArray();
+
+  const rootFolders = structureFolders({
+    folders: foldersRes,
+    documents: caseDocuments,
+  });
+
+  console.log({ caseDocuments });
 
   return {
-    _id: casesRes[0]._id,
-    name: casesRes[0].caseName,
+    _id: caseRes._id,
+    name: caseRes.caseName,
     folders: rootFolders,
+    documents: caseDocuments.filter((doc) => doc.folderId === null),
   };
 };
 

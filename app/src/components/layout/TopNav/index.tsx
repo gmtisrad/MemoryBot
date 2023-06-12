@@ -32,8 +32,6 @@ export const TopNav: FC<ITopNavProps> = ({ sx, handleDrawerToggle }) => {
     setAnchorElUser(null);
   };
 
-  console.log({ sx });
-
   return (
     <AppBar sx={sx} position="sticky">
       <Container maxWidth="xl">

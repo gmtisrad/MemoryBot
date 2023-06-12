@@ -1,9 +1,15 @@
 import { create } from 'zustand';
 
-interface IAppStore {}
+interface IAppStore {
+  cases: any[];
+  setCases: (cases: any) => void;
+}
 
-const useAppStore = create<IAppStore>((set) => ({
-  bears: 0,
-  increasePopulation: () => set((state) => ({ bears: state.bears + 1 })),
-  removeAllBears: () => set({ bears: 0 }),
-}));
+export const useAppStore = () => {
+  const appStore = create<IAppStore>((set) => ({
+    cases: [],
+    setCases: (cases: any) => set({ cases }),
+  }));
+
+  return appStore;
+};

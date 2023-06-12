@@ -152,7 +152,7 @@ filesRouter.post(
       const fileUrl = `https://${params.Bucket}.s3.${region}.amazonaws.com/${params.Key}`;
 
       insertDocumentEntry({
-        documentName: originalFile?.originalname,
+        name: originalFile?.originalname,
         caseId,
         folderId,
         title,
@@ -170,9 +170,9 @@ filesRouter.post(
 );
 
 filesRouter.get(
-  '/documents/:userId/:caseId/:folderId/:documentName',
+  '/documents/:userId/:caseId/:folderId/:name',
   async (req, res) => {
-    const { userId, caseId, folderId, documentName } = req.params;
+    const { userId, caseId, folderId, name } = req.params;
 
     let document;
 
@@ -181,7 +181,7 @@ filesRouter.get(
         userId,
         caseId,
         folderId,
-        documentName,
+        name,
       });
     } catch (error) {
       console.log(error);

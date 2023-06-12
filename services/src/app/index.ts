@@ -127,9 +127,21 @@ appRouter.get('/cases/user/:userId', async (req, res) => {
           .find({ _id: { $in: caseItem.folders } })
           .toArray();
 
-        const structuredFolders = structureFolders({ folders: foldersRes });
+        const documentsRes = await mongoDB
+          .collection('documents')
+          .find({ _id: { $in: caseItem.documents } })
+          .toArray();
 
-        return { ...caseItem, folders: structuredFolders };
+        const structuredFolders = structureFolders({
+          folders: foldersRes,
+          documents: documentsRes,
+        });
+
+        return {
+          ...caseItem,
+          folders: structuredFolders,
+          documents: documentsRes.filter((doc: any) => !doc.folderId),
+        };
       }),
     );
   } catch (e) {
@@ -150,7 +162,23 @@ appRouter.get('/cases/:caseId', async (req, res) => {
     _case = await getCase({ caseId });
   } catch (e) {
     console.log(e);
+    res.status(500).send('Error getting case');
   }
 
   res.json({ _case });
+});
+
+appRouter.post('/partner/prompt', async (req, res) => {
+  const { prompt } = req.body;
+
+  let completion;
+
+  try {
+    completion = await createCompletion(prompt);
+  } catch (e) {
+    console.log(e);
+    res.status(500).send('Error prompting partner');
+  }
+
+  res.json({ completion });
 });
