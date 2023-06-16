@@ -18,7 +18,6 @@ import {
 import {
   ArrowDropDown,
   ArrowRight,
-  Article,
   ArticleOutlined,
   Home,
   SmartToy,
@@ -30,6 +29,7 @@ import { styled } from 'styled-components';
 import { LinkBehavior } from '../../utilities/LinkBehavior';
 import { useCurrentPath } from '../../../hooks/useCurrentPath';
 import { useGetCases } from '../../../queries/useGetCases';
+import { useParams } from 'react-router-dom';
 
 const StyledTreeItem = styled(TreeItem)`
   font-size: 12px;
@@ -44,7 +44,7 @@ const StyledTreeItem = styled(TreeItem)`
 `;
 
 const containerStyles = {
-  padding: '48px ',
+  padding: { xs: '12px 6px', md: '48px' },
   flex: 1,
   // backgroundColor: 'var(--joy-palette-neutral-100, #EBEBEF)',
 };
@@ -78,8 +78,11 @@ const pages = [
 
 export const Page: FC<IPageProps> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { chatId, caseId } = useParams();
+
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
   const {
     isLoading: isCasesLoading,
     data: casesData,
@@ -98,7 +101,7 @@ export const Page: FC<IPageProps> = ({ children }) => {
   }, [mobileOpen]);
 
   const drawerWidth = useMemo(
-    () => (isSmallScreen ? '180px' : '240px'),
+    () => (isSmallScreen ? '180px' : '280px'),
     [isSmallScreen],
   );
 
@@ -168,64 +171,166 @@ export const Page: FC<IPageProps> = ({ children }) => {
                     {casesData.cases.map((caseItem: any) => {
                       return (
                         <StyledTreeItem
-                          key={caseItem._id}
+                          key={`documents-${caseItem._id}`}
                           nodeId={caseItem._id}
                           label={caseItem.name}
                         >
-                          {caseItem.folders.map((folder: any) => {
-                            return (
-                              <StyledTreeItem
-                                key={folder._id}
-                                nodeId={folder._id}
-                                label={folder.name}
-                              >
-                                {folder.folders.map((subFolder: any) => {
-                                  return (
-                                    <StyledTreeItem
-                                      key={subFolder._id}
-                                      nodeId={subFolder._id}
-                                      label={subFolder.name}
-                                    >
-                                      {subFolder.documents.map(
-                                        (document: any) => {
-                                          return (
-                                            <StyledTreeItem
-                                              key={document._id}
-                                              nodeId={document._id}
-                                              label={document.name}
-                                              icon={<ArticleOutlined />}
-                                            />
-                                          );
-                                        },
-                                      )}
-                                    </StyledTreeItem>
-                                  );
-                                })}
-                                {folder.documents.map((document: any) => {
-                                  return (
-                                    <StyledTreeItem
-                                      key={document._id}
-                                      nodeId={document._id}
-                                      label={document.name}
-                                      icon={<ArticleOutlined />}
-                                    />
-                                  );
-                                })}
-                              </StyledTreeItem>
-                            );
-                          })}
-                          {caseItem.documents.map((document: any) => {
-                            console.log({ document });
-                            return (
-                              <StyledTreeItem
-                                key={document._id}
-                                nodeId={document._id}
-                                label={document.name}
-                                icon={<ArticleOutlined />}
-                              />
-                            );
-                          })}
+                          <StyledTreeItem
+                            key={`files-${caseItem._id}-all`}
+                            nodeId={`files-${caseItem._id}-all`}
+                            label="Your Files"
+                          >
+                            {caseItem.folders.map((folder: any) => {
+                              return (
+                                <StyledTreeItem
+                                  key={folder._id}
+                                  nodeId={folder._id}
+                                  label={folder.name}
+                                >
+                                  {folder.folders.map((subFolder: any) => {
+                                    return (
+                                      <StyledTreeItem
+                                        key={subFolder._id}
+                                        nodeId={subFolder._id}
+                                        label={subFolder.name}
+                                      >
+                                        {subFolder.documents.map(
+                                          (document: any) => {
+                                            return (
+                                              <StyledTreeItem
+                                                key={document._id}
+                                                nodeId={document._id}
+                                                label={document.name}
+                                                icon={<ArticleOutlined />}
+                                              />
+                                            );
+                                          },
+                                        )}
+                                      </StyledTreeItem>
+                                    );
+                                  })}
+                                  {folder.documents.map((document: any) => {
+                                    return (
+                                      <StyledTreeItem
+                                        key={document._id}
+                                        nodeId={document._id}
+                                        label={document.name}
+                                        icon={<ArticleOutlined />}
+                                      />
+                                    );
+                                  })}
+                                </StyledTreeItem>
+                              );
+                            })}
+                            {caseItem.documents.map((document: any) => {
+                              return (
+                                <StyledTreeItem
+                                  key={document._id}
+                                  nodeId={document._id}
+                                  label={document.name}
+                                  icon={<ArticleOutlined />}
+                                />
+                              );
+                            })}
+                          </StyledTreeItem>
                         </StyledTreeItem>
+                      );
+                    })}
+                  </TreeView>
+                )}
+              {currentPath.includes(page.title.toLowerCase()) &&
+                'Partner' == page.title &&
+                !!casesData.cases.length &&
+                !isCasesLoading && (
+                  <TreeView
+                    aria-label="documents tree"
+                    defaultCollapseIcon={<ArrowDropDown />}
+                    defaultExpandIcon={<ArrowRight />}
+                    defaultEndIcon={<div style={{ width: 24 }} />}
+                    defaultExpanded={[...(caseId ? [caseId] : [])]}
+                    sx={{ pt: 0, pb: 0 }}
+                  >
+                    {casesData.cases.map((caseItem: any) => {
+                      return (
+                        <LinkBehavior
+                          key={caseItem._id}
+                          sx={{
+                            textDecoration: 'none',
+                            color: 'inherit',
+                          }}
+                          href={`/partner/${caseItem._id}/chat`}
+                        >
+                          <StyledTreeItem
+                            key={`chats-${caseItem._id}`}
+                            nodeId={caseItem._id}
+                            label={caseItem.name}
+                          >
+                            <StyledTreeItem
+                              nodeId={`chats-${caseItem._id}-all`}
+                              label="Chats"
+                            >
+                              {caseItem.chats.map((chat: any, idx: number) => {
+                                return (
+                                  <LinkBehavior
+                                    key={chat._id}
+                                    sx={{
+                                      textDecoration: 'none',
+                                      color: 'inherit',
+                                    }}
+                                    href={`/partner/${caseItem._id}/chat/${chat._id}`}
+                                  >
+                                    <StyledTreeItem
+                                      nodeId={chat._id}
+                                      label={`${chat.name}-${idx}`}
+                                      sx={{
+                                        backgroundColor: `${
+                                          chatId == chat._id
+                                            ? 'var(--joy-palette-neutral-200, #D8D8DF)'
+                                            : 'transparent'
+                                        }`,
+                                      }}
+                                    />
+                                  </LinkBehavior>
+                                );
+                              })}
+                            </StyledTreeItem>
+                            <LinkBehavior
+                              key={'generate-documents'}
+                              sx={{
+                                textDecoration: 'none',
+                                color: 'inherit',
+                              }}
+                              href={`/partner/${caseItem._id}/generate`}
+                            >
+                              <StyledTreeItem
+                                nodeId={`generate-documents-${caseItem._id}`}
+                                label="Generate Documents"
+                              >
+                                {caseItem.generatedDocuments.map(
+                                  (genDoc: any) => {
+                                    return (
+                                      <LinkBehavior
+                                        key={'generated-documents'}
+                                        sx={{
+                                          textDecoration: 'none',
+                                          color: 'inherit',
+                                        }}
+                                        href={`/partner/${caseItem._id}/generated/${genDoc._id}`}
+                                      >
+                                        <StyledTreeItem
+                                          key={genDoc._id}
+                                          nodeId={genDoc._id}
+                                          label={genDoc.documentType}
+                                          icon={<ArticleOutlined />}
+                                        />
+                                      </LinkBehavior>
+                                    );
+                                  },
+                                )}
+                              </StyledTreeItem>
+                            </LinkBehavior>
+                          </StyledTreeItem>
+                        </LinkBehavior>
                       );
                     })}
                   </TreeView>
@@ -235,7 +340,14 @@ export const Page: FC<IPageProps> = ({ children }) => {
         </List>
       </div>
     ),
-    [casesData.cases, currentPath, handleDrawerToggle, isCasesLoading],
+    [
+      caseId,
+      casesData.cases,
+      chatId,
+      currentPath,
+      handleDrawerToggle,
+      isCasesLoading,
+    ],
   );
 
   return (
@@ -243,6 +355,7 @@ export const Page: FC<IPageProps> = ({ children }) => {
       <Drawer
         sx={{
           display: { xs: 'none', sm: 'block' },
+          width: '280px',
           '& .MuiDrawer-paper': {
             backgroundColor: 'var(--joy-palette-neutral-50, #F7F7F8)',
             boxSizing: 'border-box',

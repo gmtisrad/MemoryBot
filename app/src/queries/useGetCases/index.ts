@@ -21,5 +21,5 @@ export const useGetCases: (args: IUseGetCasesArgs) => IUseGetCasesResponse = ({
     return casesRes.data;
   });
 
-  return { isLoading, error, data: data || { cases: [] }, refetch };
+  return { isLoading, error, data: data || { cases: [], chats: [] }, refetch };
 };

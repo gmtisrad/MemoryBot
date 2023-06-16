@@ -257,6 +257,12 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
           disabled={!uploadEnabled}
           onClick={async () => {
             await uploadDocument();
+            setDocumentCaseId('');
+            setDocumentDate(dayjs());
+            setDocumentDescription('');
+            setDocumentFolderId('');
+            setDocumentTitle('');
+            setInputFile(null);
             toggleModalOpen(false);
           }}
         >

@@ -4,7 +4,7 @@ import { Link, LinkProps } from 'react-router-dom';
 
 export const LinkBehavior = forwardRef<
   HTMLAnchorElement,
-  Omit<LinkProps, 'to'> & { href: LinkProps['to']; sx: SxProps }
+  Omit<LinkProps, 'to'> & { href: LinkProps['to']; sx?: SxProps }
 >((props, ref) => {
   const { href, ...other } = props;
   // Map href (MUI) -> to (react-router)

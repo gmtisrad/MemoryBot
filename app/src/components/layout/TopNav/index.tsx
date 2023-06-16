@@ -8,11 +8,9 @@ import Menu from '@mui/material/Menu';
 import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import { SxProps, Theme } from '@mui/material';
-import { Link } from 'react-router-dom';
 
 const settings = ['Placeholder'];
 
@@ -33,7 +31,10 @@ export const TopNav: FC<ITopNavProps> = ({ sx, handleDrawerToggle }) => {
   };
 
   return (
-    <AppBar sx={sx} position="sticky">
+    <AppBar
+      sx={{ ...sx, backgroundColor: '#002786', color: '#ffea05' }}
+      position="sticky"
+    >
       <Container maxWidth="xl">
         <Toolbar disableGutters variant="dense" sx={{ height: '64px' }}>
           <Typography
@@ -51,7 +52,7 @@ export const TopNav: FC<ITopNavProps> = ({ sx, handleDrawerToggle }) => {
               textDecoration: 'none',
             }}
           >
-            LegalAI
+            Advocatus
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', sm: 'none' } }}>

@@ -22,7 +22,14 @@ export const getDb = async () => {
   return _db;
 };
 
-const COLLECTIONS = ['documents', 'cases', 'folders', 'users'];
+const COLLECTIONS = [
+  'documents',
+  'cases',
+  'folders',
+  'users',
+  'chats',
+  'generatedDocuments',
+];
 
 export const createCollections = async () => {
   const db = await getDb();
@@ -31,6 +38,12 @@ export const createCollections = async () => {
   for (const collection of COLLECTIONS) {
     await db.createCollection(collection);
   }
+};
+
+export const createCollection = async (collectionName: string) => {
+  const db = await getDb();
+
+  return await db.createCollection(collectionName);
 };
 
 export const cleanStart = async () => {

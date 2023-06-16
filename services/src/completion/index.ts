@@ -23,7 +23,9 @@ const getOpenAiClient = () => {
 
 export const completionRouter = express.Router();
 
-export const createCompletion = async (prompt: string) => {
+export const createCompletion: (prompt: string) => any = async (
+  prompt: string,
+) => {
   const openAiClient = await getOpenAiClient();
 
   let completion;
@@ -31,8 +33,9 @@ export const createCompletion = async (prompt: string) => {
   // try {
   //   completion = await openAiClient?.createChatCompletion({
   //     model: 'gpt-3.5-turbo',
-  //     // model: process.env.OPENAI_COMPLETION_MODEL || 'gpt-4',
-  //     prompt,
+  //     messages: [
+  //       { role: ChatCompletionRequestMessageRoleEnum.User, content: prompt },
+  //     ],
   //   });
   // } catch (error: any) {
   //   console.log({ message: error.message });
@@ -40,13 +43,14 @@ export const createCompletion = async (prompt: string) => {
 
   try {
     completion = await openAiClient?.createChatCompletion({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4',
       messages: [
         { role: ChatCompletionRequestMessageRoleEnum.User, content: prompt },
       ],
     });
   } catch (error: any) {
     console.log({ message: error.message });
+    return { status: 500, data: { message: error.message } };
   }
 
   if (!completion) {
@@ -55,7 +59,3 @@ export const createCompletion = async (prompt: string) => {
 
   return completion.data;
 };
-
-completionRouter.post('/createCompletion', async (req, res) => {
-  const { prompt } = req.body;
-});

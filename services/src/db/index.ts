@@ -1,5 +1,5 @@
 import express from 'express';
-import { getDb } from './mongoInit';
+import { createCollection, getDb } from './mongoInit';
 import { DataType } from '@zilliz/milvus2-sdk-node';
 import { v4 as uuidv4 } from 'uuid';
 import { ObjectId } from 'mongodb';
@@ -165,6 +165,8 @@ export const createCase: (args: ICreateCaseArgs) => any = async ({
       userId: new ObjectId(userId),
       folders: [],
       documents: [],
+      chats: [],
+      generatedDocuments: [],
     });
 
   return { acknowledged, insertedId };
@@ -305,8 +307,6 @@ export const getCase: (args: IGetCaseArgs) => any = async ({ caseId }) => {
     documents: caseDocuments,
   });
 
-  console.log({ caseDocuments });
-
   return {
     _id: caseRes._id,
     name: caseRes.caseName,
@@ -330,3 +330,13 @@ export const createUser: (args: ICreateUserArgs) => any = async ({ email }) => {
 
   return { acknowledged, insertedId };
 };
+
+dbRouter.post('/createCollection', async (req, res) => {
+  const { collectionName } = req.body;
+
+  await createCollection(collectionName);
+
+  res.json({
+    success: true,
+  });
+});

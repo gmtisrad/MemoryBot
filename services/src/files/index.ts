@@ -118,8 +118,8 @@ filesRouter.post(
       }
 
       const splitter = new TokenTextSplitter({
-        chunkSize: 512,
-        chunkOverlap: 128,
+        chunkSize: 256,
+        chunkOverlap: 64,
       });
 
       const chunks = await splitter.createDocuments([text]);
