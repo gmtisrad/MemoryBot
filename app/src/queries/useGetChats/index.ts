@@ -16,7 +16,7 @@ export const useGetChats: (args: IUseGetChatsArgs) => IUseGetChatsResponse = ({
   userId,
 }) => {
   const { isLoading, error, data, refetch } = useQuery('chats', async () => {
-    const chatsRes = await axios.get(`/api/app/partner/chats/user/${userId}`);
+    const chatsRes = await axios.get(`/api/chats/user/${userId}`);
     return chatsRes.data;
   });
   return { isLoading, error, data: data || { chats: [] }, refetch };

@@ -1,78 +1,25 @@
 import express from 'express';
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} from '@aws-sdk/client-s3';
-import multer from 'multer';
+import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
-import pdfParse from 'pdf-parse';
+import path from 'path';
 import { TokenTextSplitter } from 'langchain/text_splitter';
-import { createEmbeddings } from '../embedding';
-import { insertDocumentsEntry } from '../vector_db';
-
-let _s3Config: S3Client | undefined;
-let _upload: multer.Multer | undefined;
-
-function getS3Config() {
-  if (!_s3Config) {
-    _s3Config = new S3Client({
-      region: 'us-west-2',
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
-      },
-    });
-  }
-
-  return _s3Config;
-}
-
-function getUpload() {
-  if (!_upload) {
-    _upload = multer({
-      storage: multer.memoryStorage(),
-    });
-  }
-
-  return _upload;
-}
+import {
+  getS3Config,
+  getUpload,
+  handleDOCX,
+  handlePDF,
+  handlePlaintext,
+  streamToBuffer,
+} from './helpers';
+import { createEmbeddings } from '../embedding/helpers';
+import { insertDocumentsEntry } from '../vector_db/helpers';
+import {
+  getCaseDocuments,
+  getDocumentEntry,
+  insertDocumentEntry,
+} from '../db/helpers';
 
 export const filesRouter = express.Router();
-import path from 'path';
-import mammoth from 'mammoth';
-import { getCaseDocuments, getDocumentEntry, insertDocumentEntry } from '../db';
-import { getDb } from '../db/mongoInit';
-
-// A function to handle PDF files.
-async function handlePDF(buffer: Buffer) {
-  // Parse the PDF and convert it to text
-  const data = await pdfParse(buffer);
-
-  const text = data.text.replace(/\.{3,}/g, '').replace(/\n/g, ' ');
-
-  return text;
-}
-
-// A function to handle DOCX files.
-async function handleDOCX(buffer: Buffer) {
-  // Parse the docx and convert it to text
-  const text = await mammoth.extractRawText({ buffer: buffer });
-  // Process the text as you like
-  const processedText = text.value.replace(/\.{3,}/g, '').replace(/\n/g, ' ');
-
-  return processedText;
-}
-
-// This will handle any utf-8 buffers
-async function handlePlaintext(buffer: Buffer) {
-  const text = buffer
-    .toString('utf-8')
-    .replace(/\.{3,}/g, '')
-    .replace(/\n/g, ' ');
-
-  return text;
-}
 
 filesRouter.post(
   '/upload',
@@ -226,16 +173,3 @@ filesRouter.get('/download', async (req, res) => {
     res.status(500).send('Error downloading the file.');
   }
 });
-
-function streamToBuffer(readableStream: Readable): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: any[] = [];
-    readableStream.on('data', (data) => {
-      chunks.push(data);
-    });
-    readableStream.on('end', () => {
-      resolve(Buffer.concat(chunks));
-    });
-    readableStream.on('error', reject);
-  });
-}

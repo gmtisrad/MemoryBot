@@ -1,87 +1,41 @@
 import { ObjectId } from 'mongodb';
 import { getDb } from '../db/mongoInit';
+import express from 'express';
+import { createChat } from './helpers';
 
-interface ICreateChatArgs {
-  userId: ObjectId;
-  caseId: ObjectId;
-  name: string;
-}
+export const chatsRouter = express.Router();
 
-interface ICreateChatResponse {
-  chatId: ObjectId;
-}
+chatsRouter.post('/create', async (req, res) => {
+  const { userId, caseId, name } = req.body;
 
-export interface IMessage {
-  id: ObjectId;
-  isUser: boolean;
-  content: string;
-}
-
-export const createChat: (
-  args: ICreateChatArgs,
-) => Promise<ICreateChatResponse> = async ({ userId, caseId, name }) => {
-  const db = await getDb();
-
-  const { insertedId } = await db.collection('chats').insertOne({
-    userId,
-    caseId,
+  await createChat({
+    userId: new ObjectId(userId),
+    caseId: new ObjectId(caseId),
     name,
-    messages: [],
   });
 
-  await db.collection('cases').updateOne(
-    {
-      _id: caseId,
-    },
-    {
-      $push: {
-        chats: insertedId,
-      },
-    },
-  );
+  res.json({ status: 'success' });
+});
 
-  return { chatId: insertedId };
-};
+chatsRouter.get('/user/:userId', async (req, res) => {
+  const { userId } = req.params;
 
-interface IInsertMessageArgs {
-  chatId: ObjectId;
-  messages: IMessage[];
-}
+  const mongoDB = await getDb();
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface IInsertMessageResponse {}
+  const chats = await mongoDB
+    .collection('chats')
+    .find({ userId: new ObjectId(userId) })
+    .toArray();
 
-export const insertMessages: (
-  args: IInsertMessageArgs,
-) => IInsertMessageResponse = async ({ chatId, messages }) => {
-  const db = await getDb();
+  const chatsByCase = chats.reduce((acc: any, chat: any) => {
+    if (!acc[chat.caseId]) {
+      acc[chat.caseId] = [];
+    }
 
-  await db.collection('chats').updateOne(
-    {
-      _id: chatId,
-    },
-    {
-      $push: {
-        messages: { $each: messages },
-      },
-    },
-  );
-};
+    acc[chat.caseId].push(chat);
 
-interface IGetChatsArgs {
-  userId: ObjectId;
-}
+    return acc;
+  }, {});
 
-interface IGetChatsResponse {
-  chats: any[];
-}
-
-export const getChats: (
-  args: IGetChatsArgs,
-) => Promise<IGetChatsResponse> = async ({ userId }) => {
-  const db = await getDb();
-
-  const chats = await db.collection('chats').find({ userId }).toArray();
-
-  return { chats };
-};
+  res.json({ chats: chatsByCase });
+});

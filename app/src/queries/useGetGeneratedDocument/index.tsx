@@ -21,7 +21,7 @@ export const useGetGeneratedDocument = ({
     `getGeneratedDocument-${generatedDocumentId}`,
     async () => {
       const generatedDocsRes = await axios.get(
-        `/api/app/partner/${caseId}/generated/${generatedDocumentId}`,
+        `/api/partner/${caseId}/generated/${generatedDocumentId}`,
       );
 
       return generatedDocsRes.data;

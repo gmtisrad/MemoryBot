@@ -32,7 +32,7 @@ export const useSendPrompt: (
     setIsLoading(true);
     let _response;
     try {
-      _response = await fetch('/api/app/partner/prompt', {
+      _response = await fetch('/api/partner/prompt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

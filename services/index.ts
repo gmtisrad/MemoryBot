@@ -9,6 +9,10 @@ import { embeddingRouter } from './src/embedding';
 import { cleanStart as milvusCleanStart } from './src/vector_db/milvusInit';
 import { cleanStart as mongoCleanStart } from './src/db/mongoInit';
 import { usersRouter } from './src/users';
+import { partnerRouter } from './src/partner';
+import { casesRouter } from './src/cases';
+import { completionRouter } from './src/completion';
+import { chatsRouter } from './src/chats';
 
 const PORT = 3000;
 
@@ -39,15 +43,23 @@ const PORT = 3000;
     res.send('Wiped');
   });
 
-  app.use('/api/files', filesRouter);
-
   app.use('/api/app', appRouter);
+
+  app.use('/api/cases', casesRouter);
+
+  app.use('/api/chats', chatsRouter);
+
+  app.use('/api/completion', completionRouter);
 
   app.use('/api/db', dbRouter);
 
-  app.use('/api/vector', vectorDBRouter);
+  app.use('/api/embedding', embeddingRouter);
 
-  app.use('/api/embeddings', embeddingRouter);
+  app.use('/api/files', filesRouter);
+
+  app.use('/api/partner', partnerRouter);
+
+  app.use('/api/vector', vectorDBRouter);
 
   app.use('/api/users', usersRouter);
 

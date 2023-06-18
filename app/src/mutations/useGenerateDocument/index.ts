@@ -52,7 +52,7 @@ export const useGenerateDocument: ({
     setIsLoading(true);
     let _response;
     try {
-      _response = await fetch('/api/app/partner/generateDocument', {
+      _response = await fetch('/api/partner/generateDocument', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

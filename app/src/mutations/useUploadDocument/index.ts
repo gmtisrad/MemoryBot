@@ -46,7 +46,7 @@ export const useUploadDocument = ({
     setError(null);
 
     try {
-      await axios.post('/api/files/upload', formData, {
+      await axios.post('/files/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

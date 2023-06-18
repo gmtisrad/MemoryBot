@@ -16,7 +16,7 @@ export const useGetCases: (args: IUseGetCasesArgs) => IUseGetCasesResponse = ({
   userId,
 }) => {
   const { isLoading, error, data, refetch } = useQuery('cases', async () => {
-    const casesRes = await axios.get(`/api/app/cases/user/${userId}`);
+    const casesRes = await axios.get(`/api/cases/user/${userId}`);
 
     return casesRes.data;
   });

@@ -25,7 +25,7 @@ export const useCreateCase: (
     try {
       setIsLoading(true);
 
-      const data = await axios.post('/api/app/cases/create', {
+      const data = await axios.post('/api/cases/create', {
         caseName,
         userId,
       });
