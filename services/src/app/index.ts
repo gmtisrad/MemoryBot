@@ -254,7 +254,7 @@ appRouter.get('/partner/chats/user/:userId', async (req, res) => {
 interface IPromptOpenAiArgs {
   prompt: string;
   numResults: string;
-  previousMessages: string[];
+  previousMessages: any[];
   userId: string;
   caseId: string;
   chatId?: string;
@@ -279,8 +279,17 @@ const promptOpenAI = async ({
 
     createdChatId = createChatRes.chatId;
   }
+  let stringifiedPreviousMessages = '';
 
-  const promptEmbedding = await createEmbedding(prompt);
+  previousMessages.forEach((message) => {
+    stringifiedPreviousMessages += message.isUser
+      ? `User: ${message.content} |`
+      : `Bot: ${message.content} |`;
+  });
+
+  const promptWithPrevMessages = `${stringifiedPreviousMessages} | Prompt: ${prompt}}`;
+
+  const promptEmbedding = await createEmbedding(promptWithPrevMessages);
 
   if (!promptEmbedding) {
     throw new Error('Embedding could not be created');
@@ -297,7 +306,9 @@ const promptOpenAI = async ({
 
   const promptWithContext = `${similarChunks.join(
     '\r\n',
-  )}\r\n----\r\n${previousMessages.join('\r\n')}\r\nPrompt: ${prompt}`;
+  )}\r\n----\r\n${previousMessages
+    .map(({ content }) => content)
+    .join('\r\n')}\r\nPrompt: ${prompt}`;
 
   const completion = await createCompletion(promptWithContext);
 
