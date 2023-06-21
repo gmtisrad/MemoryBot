@@ -105,13 +105,15 @@ export const promptOpenAIGenerateDocument = async ({
   partyB,
   sections,
 }: IPromptOpenAiGenerateDocumentArgs): Promise<{ response: string }> => {
-  const DOCUMENT_GENERATOR_SYSTEM_PROMPT = `{GPT-4: Generate a legal document in HTML and CSS. The document should be designed for legal filings in the city of ${cityName} and the state of ${stateName}. It should adhere to the standard paper width of 8.5" wide for easy conversion to PDF, meaning the html document should have a width of '8.5in', not a max-width, but a style value of 'width: 8.5'. The legal document required is a ${documentType}, involving the case between ${partyA} (plaintiff) and ${partyB} (defendant). ${
-    sections
-      ? `Please ensure the generated document includes sections for ${sections.join(
-          ' and ',
-        )}.`
-      : ''
-  }. Ensure it's appropriately formatted according to legal standards. The document should be centered horizontally, no exceptions on this condition`;
+  // const DOCUMENT_GENERATOR_SYSTEM_PROMPT = `{GPT-4: Generate a legal document in HTML and CSS. The document should be designed for legal filings in the city of ${cityName} and the state of ${stateName}. It should adhere to the standard paper width of 8.5" wide for easy conversion to PDF, meaning the html document should have a width of '8.5in', not a max-width, but a style value of 'width: 8.5'. The legal document required is a ${documentType}, involving the case between ${partyA} (plaintiff) and ${partyB} (defendant). ${
+  //   sections
+  //     ? `Please ensure the generated document includes sections for ${sections.join(
+  //         ' and ',
+  //       )}.`
+  //     : ''
+  // }. Ensure it's appropriately formatted according to legal standards. The document should be centered horizontally, no exceptions on this condition`;
+
+  const DOCUMENT_GENERATOR_SYSTEM_PROMPT = `{System GPT4: You are an AI legal assistant, you should try to reference specific state and federal case law when you generate responses. You are operating in the state of Oregon.. You are able to request any information about the case that you may need in order to refine the user's request in order for you to generate a meaningful response. The documents available to you are: The titles of the documents available to you are: CamdenBuchananAffidavit.pdf DangerSmithAffidavit.pdf EdenSaabAffidavit.pdf JerseyJacksonAffidavit.pdf MarlowNavarroAffidavit.pdf TriniRedbirdAffidavit.pdf Exhibit1.pdf Exhibit2CrowdControlPolicy.pdf Exhibit3AudioRecording.pdf Exhibit4AreaMap.pdf JacksonVNavarroComplaint.pdf JacksonVNavarroAnswer.pdf JacksonVNavarroFinalJuryInstruction.pdf JacksonVNavarroStipulations.pdf}`;
 
   // const generateDocumentPrompt = `${DOCUMENT_GENERATOR_PROMPT_PREFIX}\r\n\nPrompt: ${prompt}`;
 
