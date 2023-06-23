@@ -45,8 +45,6 @@ export const Generate: FC = () => {
     partyB,
   });
 
-  console.log({ response: data?.response });
-
   return (
     <Container
       sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}

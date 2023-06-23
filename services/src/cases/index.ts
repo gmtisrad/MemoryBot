@@ -24,7 +24,7 @@ casesRouter.post('/create', async (req, res) => {
   res.json({ caseName, createCaseRes, status: 'success' });
 });
 
-casesRouter.post('/cases/folder/create', async (req, res) => {
+casesRouter.post('/folders/create', async (req, res) => {
   const { caseId, folderName, parent } = req.body;
 
   let createCaseFolderRes;

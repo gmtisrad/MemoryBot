@@ -26,7 +26,7 @@ export const useCreateFolder: (
   const createFolder = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await axios.post('/api/cases/folder/create', {
+      const res = await axios.post('/api/cases/folders/create', {
         caseId,
         folderName: name,
         parent: parentId,

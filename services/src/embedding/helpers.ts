@@ -1,4 +1,4 @@
-import { getOpenAiClient } from '../completion/helpers';
+import { getOpenAiClient } from '../llm/helpers';
 
 export const createEmbedding = async (text: string) => {
   const openAiClient = await getOpenAiClient();

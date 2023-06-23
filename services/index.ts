@@ -11,7 +11,7 @@ import { cleanStart as mongoCleanStart } from './src/db/mongoInit';
 import { usersRouter } from './src/users';
 import { partnerRouter } from './src/partner';
 import { casesRouter } from './src/cases';
-import { completionRouter } from './src/completion';
+import { llmRouter } from './src/llm';
 import { chatsRouter } from './src/chats';
 
 const PORT = 3000;
@@ -49,7 +49,7 @@ const PORT = 3000;
 
   app.use('/api/chats', chatsRouter);
 
-  app.use('/api/completion', completionRouter);
+  app.use('/api/llm', llmRouter);
 
   app.use('/api/db', dbRouter);
 

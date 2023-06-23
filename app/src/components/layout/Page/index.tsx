@@ -29,7 +29,7 @@ import { styled } from 'styled-components';
 import { LinkBehavior } from '../../utilities/LinkBehavior';
 import { useCurrentPath } from '../../../hooks/useCurrentPath';
 import { useGetCases } from '../../../queries/useGetCases';
-import { useParams } from 'react-router-dom';
+import { Outlet, useLocation, useParams } from 'react-router-dom';
 
 const StyledTreeItem = styled(TreeItem)`
   font-size: 12px;
@@ -43,15 +43,19 @@ const StyledTreeItem = styled(TreeItem)`
   }
 `;
 
+const AppLink = styled(LinkBehavior)`
+  text-decoration: none;
+  color: inherit;
+`;
+
 const containerStyles = {
   padding: { xs: '12px 6px', md: '48px' },
   flex: 1,
   // backgroundColor: 'var(--joy-palette-neutral-100, #EBEBEF)',
 };
 
-interface IPageProps {
-  children: React.ReactNode;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface IPageProps {}
 
 const boxStyles = {
   position: 'absolute',
@@ -76,23 +80,25 @@ const pages = [
   { title: 'Partner', icon: <SmartToy /> },
 ];
 
-export const Page: FC<IPageProps> = ({ children }) => {
+export const Page: FC<IPageProps> = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { chatId, caseId } = useParams();
+  const location = useLocation();
 
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   const {
     isLoading: isCasesLoading,
-    data: casesData,
+    data: { cases },
     error: casesError,
   } = useGetCases({ userId: '6483e65fd24b426cd772ce1c' });
 
   const paths = useCurrentPath();
 
   const currentPath = useMemo(() => {
-    const base = paths[0].pathnameBase;
+    console.log({ paths, pathLength: paths.length });
+    const base = paths[paths.length - 1].pathname;
     return base;
   }, [paths]);
 
@@ -157,9 +163,19 @@ export const Page: FC<IPageProps> = ({ children }) => {
                   }
                 />
               </ListItemButton>
-              {currentPath.includes(page.title.toLowerCase()) &&
+              {(() => {
+                // console.log({
+                //   currentPath,
+                //   pageTitle: page.title.toLowerCase(),
+                //   casesLength: cases.length,
+                //   isCasesLoading,
+                //   paths,
+                // });
+                return <div />;
+              })()}
+              {location.pathname.includes(page.title.toLowerCase()) &&
                 'cases' == page.title.toLowerCase() &&
-                !!casesData.cases.length &&
+                !!cases.length &&
                 !isCasesLoading && (
                   <TreeView
                     aria-label="documents tree"
@@ -168,33 +184,75 @@ export const Page: FC<IPageProps> = ({ children }) => {
                     defaultEndIcon={<div style={{ width: 24 }} />}
                     sx={{ pt: 0, pb: 0 }}
                   >
-                    {casesData.cases.map((caseItem: any) => {
+                    {cases.map((caseItem: any) => {
                       return (
-                        <StyledTreeItem
-                          key={`documents-${caseItem._id}`}
-                          nodeId={caseItem._id}
-                          label={caseItem.name}
+                        <AppLink
+                          key={`case-${caseItem._id}`}
+                          href={`/cases/${caseItem._id}`}
                         >
                           <StyledTreeItem
-                            key={`files-${caseItem._id}-all`}
-                            nodeId={`files-${caseItem._id}-all`}
-                            label="Your Files"
+                            key={`documents-${caseItem._id}`}
+                            nodeId={caseItem._id}
+                            label={caseItem.name}
                           >
-                            {caseItem.folders.map((folder: any) => {
-                              return (
-                                <StyledTreeItem
-                                  key={folder._id}
-                                  nodeId={folder._id}
-                                  label={folder.name}
-                                >
-                                  {folder.folders.map((subFolder: any) => {
-                                    return (
+                            <AppLink href={`/cases/${caseItem._id}/folders`}>
+                              <StyledTreeItem
+                                key={`files-${caseItem._id}-all`}
+                                nodeId={`files-${caseItem._id}-all`}
+                                label="Your Files"
+                              >
+                                {caseItem.folders.map((folder: any) => {
+                                  return (
+                                    <AppLink
+                                      key={`folder-${folder._id}`}
+                                      href={`/cases/${caseItem._id}/folders/${folder._id}`}
+                                    >
                                       <StyledTreeItem
-                                        key={subFolder._id}
-                                        nodeId={subFolder._id}
-                                        label={subFolder.name}
+                                        key={folder._id}
+                                        nodeId={folder._id}
+                                        label={folder.name}
                                       >
-                                        {subFolder.documents.map(
+                                        {folder.folders.map(
+                                          (subFolder: any) => {
+                                            return (
+                                              <AppLink
+                                                key={`folder-${folder._id}`}
+                                                href={`/cases/${caseItem._id}/folders/${subFolder._id}`}
+                                              >
+                                                <StyledTreeItem
+                                                  key={subFolder._id}
+                                                  nodeId={subFolder._id}
+                                                  label={subFolder.name}
+                                                >
+                                                  {subFolder.documents.map(
+                                                    (document: any) => {
+                                                      return (
+                                                        <AppLink
+                                                          key={`folder-${folder._id}`}
+                                                          href={`/cases/${caseItem._id}/folders/${subFolder._id}/documents/${document._id}`}
+                                                        >
+                                                          <StyledTreeItem
+                                                            key={document._id}
+                                                            nodeId={
+                                                              document._id
+                                                            }
+                                                            label={
+                                                              document.name
+                                                            }
+                                                            icon={
+                                                              <ArticleOutlined />
+                                                            }
+                                                          />
+                                                        </AppLink>
+                                                      );
+                                                    },
+                                                  )}
+                                                </StyledTreeItem>
+                                              </AppLink>
+                                            );
+                                          },
+                                        )}
+                                        {folder.documents.map(
                                           (document: any) => {
                                             return (
                                               <StyledTreeItem
@@ -207,40 +265,30 @@ export const Page: FC<IPageProps> = ({ children }) => {
                                           },
                                         )}
                                       </StyledTreeItem>
-                                    );
-                                  })}
-                                  {folder.documents.map((document: any) => {
-                                    return (
-                                      <StyledTreeItem
-                                        key={document._id}
-                                        nodeId={document._id}
-                                        label={document.name}
-                                        icon={<ArticleOutlined />}
-                                      />
-                                    );
-                                  })}
-                                </StyledTreeItem>
-                              );
-                            })}
-                            {caseItem.documents.map((document: any) => {
-                              return (
-                                <StyledTreeItem
-                                  key={document._id}
-                                  nodeId={document._id}
-                                  label={document.name}
-                                  icon={<ArticleOutlined />}
-                                />
-                              );
-                            })}
+                                    </AppLink>
+                                  );
+                                })}
+                                {caseItem.documents.map((document: any) => {
+                                  return (
+                                    <StyledTreeItem
+                                      key={document._id}
+                                      nodeId={document._id}
+                                      label={document.name}
+                                      icon={<ArticleOutlined />}
+                                    />
+                                  );
+                                })}
+                              </StyledTreeItem>
+                            </AppLink>
                           </StyledTreeItem>
-                        </StyledTreeItem>
+                        </AppLink>
                       );
                     })}
                   </TreeView>
                 )}
-              {currentPath.includes(page.title.toLowerCase()) &&
+              {location.pathname.includes(page.title.toLowerCase()) &&
                 'Partner' == page.title &&
-                !!casesData.cases.length &&
+                !!cases.length &&
                 !isCasesLoading && (
                   <TreeView
                     aria-label="documents tree"
@@ -250,14 +298,10 @@ export const Page: FC<IPageProps> = ({ children }) => {
                     defaultExpanded={[...(caseId ? [caseId] : [])]}
                     sx={{ pt: 0, pb: 0 }}
                   >
-                    {casesData.cases.map((caseItem: any) => {
+                    {cases.map((caseItem: any) => {
                       return (
-                        <LinkBehavior
-                          key={caseItem._id}
-                          sx={{
-                            textDecoration: 'none',
-                            color: 'inherit',
-                          }}
+                        <AppLink
+                          key={`partner-${caseItem._id}`}
                           href={`/partner/${caseItem._id}/chat`}
                         >
                           <StyledTreeItem
@@ -271,12 +315,8 @@ export const Page: FC<IPageProps> = ({ children }) => {
                             >
                               {caseItem.chats.map((chat: any, idx: number) => {
                                 return (
-                                  <LinkBehavior
+                                  <AppLink
                                     key={chat._id}
-                                    sx={{
-                                      textDecoration: 'none',
-                                      color: 'inherit',
-                                    }}
                                     href={`/partner/${caseItem._id}/chat/${chat._id}`}
                                   >
                                     <StyledTreeItem
@@ -290,11 +330,11 @@ export const Page: FC<IPageProps> = ({ children }) => {
                                         }`,
                                       }}
                                     />
-                                  </LinkBehavior>
+                                  </AppLink>
                                 );
                               })}
                             </StyledTreeItem>
-                            <LinkBehavior
+                            <AppLink
                               key={'generate-documents'}
                               sx={{
                                 textDecoration: 'none',
@@ -309,8 +349,8 @@ export const Page: FC<IPageProps> = ({ children }) => {
                                 {caseItem.generatedDocuments.map(
                                   (genDoc: any) => {
                                     return (
-                                      <LinkBehavior
-                                        key={'generated-documents'}
+                                      <AppLink
+                                        key={`generated-documents-${genDoc._id}`}
                                         sx={{
                                           textDecoration: 'none',
                                           color: 'inherit',
@@ -323,14 +363,14 @@ export const Page: FC<IPageProps> = ({ children }) => {
                                           label={genDoc.documentType}
                                           icon={<ArticleOutlined />}
                                         />
-                                      </LinkBehavior>
+                                      </AppLink>
                                     );
                                   },
                                 )}
                               </StyledTreeItem>
-                            </LinkBehavior>
+                            </AppLink>
                           </StyledTreeItem>
-                        </LinkBehavior>
+                        </AppLink>
                       );
                     })}
                   </TreeView>
@@ -342,11 +382,12 @@ export const Page: FC<IPageProps> = ({ children }) => {
     ),
     [
       caseId,
-      casesData.cases,
+      cases,
       chatId,
       currentPath,
       handleDrawerToggle,
       isCasesLoading,
+      location.pathname,
     ],
   );
 
@@ -390,7 +431,7 @@ export const Page: FC<IPageProps> = ({ children }) => {
       <Box id="content-wrapper" sx={getContentStyles(contentMarginLeft)}>
         <TopNav handleDrawerToggle={handleDrawerToggle} />
         <Container maxWidth={false} sx={containerStyles}>
-          {children}
+          <Outlet />
         </Container>
       </Box>
     </Box>

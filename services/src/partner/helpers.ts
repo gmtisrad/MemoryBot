@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { createCompletion } from '../completion/helpers';
+import { createCompletion } from '../llm/helpers';
 import { createEmbedding } from '../embedding/helpers';
 import {
   ICreateGeneratedDocumentArgs,

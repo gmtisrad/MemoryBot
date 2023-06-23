@@ -1,52 +1,24 @@
-import { Home } from './components/pages/Home';
-import { Partner } from './components/pages/Partner';
 import { Cases } from './components/pages/Cases';
 import { Page } from './components/layout/Page';
 import { Generate } from './components/pages/Generate';
 import { Generated } from './components/pages/Generated';
+import { Home } from './components/pages/home';
+import { Partner } from './components/pages/partner';
 
-const home = (
-  <Page>
-    <Home />
-  </Page>
-);
+const home = <Home />;
 
-const cases = (
-  <Page>
-    <Cases />
-  </Page>
-);
+const cases = <Cases />;
 
-const partner = (
-  <Page>
-    <Partner />
-  </Page>
-);
+const partner = <Partner />;
 
-const generate = (
-  <Page>
-    <Generate />
-  </Page>
-);
+const generate = <Generate />;
 
-const generated = (
-  <Page>
-    <Generated />
-  </Page>
-);
+const generated = <Generated />;
 
-export const routes = [
-  {
-    path: '/',
-    element: home,
-  },
-  {
-    path: '/cases',
-    element: cases,
-  },
+const partnerRoutes = [
   {
     path: '/partner',
-    element: <Page>Partner</Page>,
+    element: <div>Partner</div>,
   },
   {
     path: '/partner/:caseId/chat/',
@@ -63,5 +35,46 @@ export const routes = [
   {
     path: `/partner/:caseId/generated/:generatedDocumentId`,
     element: generated,
+  },
+];
+
+const caseRoutes = [
+  {
+    path: '/cases',
+    element: cases,
+  },
+  {
+    path: '/cases/:caseId',
+    element: cases,
+  },
+  {
+    path: '/cases/:caseId/folders',
+    element: cases,
+  },
+  {
+    path: '/cases/:caseId/folders/:folderId',
+    element: cases,
+  },
+  {
+    path: '/cases/:caseId/folders/:folderId/files',
+    element: cases,
+  },
+  {
+    path: '/cases/:caseId/folders/:folderId/files/:fileId',
+    element: cases,
+  },
+];
+
+export const routes = [
+  {
+    element: <Page />,
+    children: [
+      {
+        path: '/',
+        element: home,
+      },
+      ...caseRoutes,
+      ...partnerRoutes,
+    ],
   },
 ];

@@ -15,6 +15,7 @@ import { ChangeEvent, FC, useMemo, useState } from 'react';
 import { TakeoverModal } from '../../../../shared/TakeoverModal';
 import { useGetCases } from '../../../../../queries/useGetCases';
 import { useCreateFolder } from '../../../../../mutations/useCreateFolder';
+import { useParams } from 'react-router-dom';
 
 interface IAddFolderModalProps {
   toggleModalOpen: (isOpen?: boolean) => void;
@@ -25,7 +26,9 @@ export const AddFolderModal: FC<IAddFolderModalProps> = ({
   toggleModalOpen,
   open,
 }) => {
-  const [caseId, setCaseId] = useState<string>('');
+  const { caseId: caseIdParam } = useParams<{ caseId: string }>();
+
+  const [caseId, setCaseId] = useState<string>(caseIdParam || '');
   const [parentFolderId, setParentFolderId] = useState<string>('');
   const [folderName, setFolderName] = useState<string>('');
 
@@ -73,33 +76,38 @@ export const AddFolderModal: FC<IAddFolderModalProps> = ({
         <Typography alignContent={'center'} variant="h5">
           Folders
         </Typography>
-        <Tooltip
-          enterNextDelay={500}
-          enterDelay={500}
-          title="What case to add the folder?"
-        >
-          <FormControl variant="outlined" fullWidth required>
-            <InputLabel sx={{ backgroundColor: '#f7f7f8' }} id="case-id-label">
-              Which case?
-            </InputLabel>
-            <Select
-              labelId="case-id-label"
-              id="case-id"
-              required
-              multiline
-              placeholder="Case Name..."
-              value={caseId}
-              onChange={handleCaseIdChange}
-            >
-              {!isCasesLoading &&
-                casesData?.cases.flatMap((caseData: any) => (
-                  <MenuItem key={caseData._id} value={caseData._id}>
-                    {caseData.name}
-                  </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
-        </Tooltip>
+        {!caseIdParam && (
+          <Tooltip
+            enterNextDelay={500}
+            enterDelay={500}
+            title="What case to add the folder?"
+          >
+            <FormControl variant="outlined" fullWidth required>
+              <InputLabel
+                sx={{ backgroundColor: '#f7f7f8' }}
+                id="case-id-label"
+              >
+                Which case?
+              </InputLabel>
+              <Select
+                labelId="case-id-label"
+                id="case-id"
+                required
+                multiline
+                placeholder="Case Name..."
+                value={caseId}
+                onChange={handleCaseIdChange}
+              >
+                {!isCasesLoading &&
+                  casesData?.cases.flatMap((caseData: any) => (
+                    <MenuItem key={caseData._id} value={caseData._id}>
+                      {caseData.name}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </Tooltip>
+        )}
         <Tooltip
           enterNextDelay={500}
           enterDelay={500}

@@ -22,6 +22,7 @@ import { useUploadDocument } from '../../../../../mutations/useUploadDocument';
 import { DatePicker } from '@mui/x-date-pickers';
 import dayjs, { Dayjs } from 'dayjs';
 import { TakeoverModal } from '../../../../shared/TakeoverModal';
+import { useParams } from 'react-router-dom';
 
 function renderFolderMenuItems(folders: any[], paddingLeft = 0) {
   return folders.flatMap((folder: any) => {
@@ -54,11 +55,20 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
   open,
   toggleModalOpen,
 }) => {
+  const { caseId: caseIdParam, folderId: folderIdParam } = useParams<{
+    caseId: string;
+    folderId: string;
+  }>();
+
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [documentTitle, setDocumentTitle] = useState<string>('');
   const [documentDescription, setDocumentDescription] = useState<string>('');
-  const [documentCaseId, setDocumentCaseId] = useState<string>('');
-  const [documentFolderId, setDocumentFolderId] = useState<string>('');
+  const [documentCaseId, setDocumentCaseId] = useState<string>(
+    caseIdParam || '',
+  );
+  const [documentFolderId, setDocumentFolderId] = useState<string>(
+    folderIdParam || '',
+  );
   const [documentDate, setDocumentDate] = useState<Dayjs | null>(dayjs());
 
   const {
@@ -191,65 +201,69 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
             />
           </div>
         </Tooltip>
-        <Tooltip
-          enterNextDelay={500}
-          enterDelay={500}
-          title="Which case are you adding this document to?"
-        >
-          <FormControl variant="outlined" fullWidth required>
-            <InputLabel
-              sx={{ backgroundColor: '#f7f7f8' }}
-              id="document-case-id-label"
-            >
-              Which case does this document belong to?
-            </InputLabel>
-            <Select
-              labelId="document-case-id-label"
-              id="document-case-id"
-              required
-              multiline
-              placeholder="Case Name..."
-              value={documentCaseId}
-              onChange={handleDocumentCaseIdChange}
-            >
-              {!isCasesLoading &&
-                casesData?.cases.map((caseData: any, idx: number) => (
-                  <MenuItem key={caseData._id} value={caseData._id}>
-                    {caseData.name}
-                  </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
-        </Tooltip>
-        <Tooltip
-          enterNextDelay={500}
-          enterDelay={500}
-          title="Which folder would you like to add your document to?"
-        >
-          <FormControl variant="outlined" fullWidth>
-            <InputLabel
-              sx={{ backgroundColor: '#f7f7f8' }}
-              id="document-folder-id-label"
-            >
-              Which folder?
-            </InputLabel>
-            <Select
-              labelId="document-folder-id-label"
-              id="document-folder-id"
-              multiline
-              placeholder="Folder Name..."
-              value={documentFolderId}
-              onChange={handleDocumentFolderIdChange}
-            >
-              <MenuItem sx={{ paddingLeft: '24px' }} value={''}>
-                None
-              </MenuItem>
-              {!isCasesLoading &&
-                relevantCase &&
-                renderFolderMenuItems(relevantCase.folders, 24)}
-            </Select>
-          </FormControl>
-        </Tooltip>
+        {!caseIdParam && (
+          <Tooltip
+            enterNextDelay={500}
+            enterDelay={500}
+            title="Which case are you adding this document to?"
+          >
+            <FormControl variant="outlined" fullWidth required>
+              <InputLabel
+                sx={{ backgroundColor: '#f7f7f8' }}
+                id="document-case-id-label"
+              >
+                Which case does this document belong to?
+              </InputLabel>
+              <Select
+                labelId="document-case-id-label"
+                id="document-case-id"
+                required
+                multiline
+                placeholder="Case Name..."
+                value={documentCaseId}
+                onChange={handleDocumentCaseIdChange}
+              >
+                {!isCasesLoading &&
+                  casesData?.cases.map((caseData: any, idx: number) => (
+                    <MenuItem key={caseData._id} value={caseData._id}>
+                      {caseData.name}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </Tooltip>
+        )}
+        {!folderIdParam && (
+          <Tooltip
+            enterNextDelay={500}
+            enterDelay={500}
+            title="Which folder would you like to add your document to?"
+          >
+            <FormControl variant="outlined" fullWidth>
+              <InputLabel
+                sx={{ backgroundColor: '#f7f7f8' }}
+                id="document-folder-id-label"
+              >
+                Which folder?
+              </InputLabel>
+              <Select
+                labelId="document-folder-id-label"
+                id="document-folder-id"
+                multiline
+                placeholder="Folder Name..."
+                value={documentFolderId}
+                onChange={handleDocumentFolderIdChange}
+              >
+                <MenuItem sx={{ paddingLeft: '24px' }} value={''}>
+                  None
+                </MenuItem>
+                {!isCasesLoading &&
+                  relevantCase &&
+                  renderFolderMenuItems(relevantCase.folders, 24)}
+              </Select>
+            </FormControl>
+          </Tooltip>
+        )}
         <Button
           sx={{ pt: '12px', pb: '12px' }}
           variant="contained"

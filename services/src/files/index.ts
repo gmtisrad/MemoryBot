@@ -1,120 +1,90 @@
 import express from 'express';
-import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { Readable } from 'stream';
-import path from 'path';
-import { TokenTextSplitter } from 'langchain/text_splitter';
 import {
-  getS3Config,
+  downloadBufferFromS3,
+  getS3FileUrl,
   getUpload,
-  handleDOCX,
-  handlePDF,
-  handlePlaintext,
-  streamToBuffer,
+  uploadBufferToS3,
 } from './helpers';
-import { createEmbeddings } from '../embedding/helpers';
-import { insertDocumentsEntry } from '../vector_db/helpers';
+import { insertVectorDocumentsEntry } from '../vector_db/helpers';
 import {
   getCaseDocuments,
   getDocumentEntry,
   insertDocumentEntry,
 } from '../db/helpers';
+import { splitBufferByToken } from '../langchain/documents';
+import { Embeddings } from '../langchain/embeddings';
 
 export const filesRouter = express.Router();
 
-filesRouter.post(
-  '/upload',
-  getUpload().single('file'),
-  async (req, res, next) => {
-    const { title, date, description, userId, folderId, caseId } = req.body;
-    try {
-      const originalFile = req.file;
-      const originalBuffer = originalFile?.buffer;
+filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
+  const { title, date, description, userId, folderId, caseId } = req.body;
+  try {
+    const originalFile = req.file;
+    const originalBuffer = originalFile?.buffer;
 
-      if (!originalBuffer) {
-        res.status(400).send('No file uploaded.');
-        return;
-      }
-
-      const params = {
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: `users/${userId}/${caseId}/${folderId}/${originalFile?.originalname}`,
-        Body: originalBuffer,
-      };
-
-      const s3Client = getS3Config();
-
-      const result = await s3Client.send(new PutObjectCommand(params));
-
-      if (result['$metadata'].httpStatusCode !== 200) {
-        res.status(500).send('Error uploading the file.');
-        return;
-      }
-
-      // Determine the file type based on its extension
-      const extension = path.extname(originalFile.originalname).toLowerCase();
-
-      let text;
-
-      // Call the appropriate function based on the file type
-      if (extension === '.pdf') {
-        text = await handlePDF(originalBuffer);
-      } else if (extension === '.docx') {
-        text = await handleDOCX(originalBuffer);
-      } else {
-        text = await handlePlaintext(originalBuffer);
-      }
-
-      const splitter = new TokenTextSplitter({
-        chunkSize: 256,
-        chunkOverlap: 64,
-      });
-
-      const chunks = await splitter.createDocuments([text]);
-
-      const contextualizedChunks = chunks.map(
-        (chunk) =>
-          `Title: ${title}\nDate: ${new Date(
-            date,
-          ).toString()}\nDescription: ${description}\nText: ${
-            chunk.pageContent
-          }`,
-      );
-
-      const embeddings = await createEmbeddings(contextualizedChunks.slice(0));
-
-      if (!embeddings || !embeddings.length) {
-        res.status(500).send('Error creating the embeddings.');
-        return;
-      }
-
-      await insertDocumentsEntry({
-        entries: embeddings.map((embedding, index) => ({
-          documentChunkEmbedding: embedding.embedding,
-          documentChunkOriginal: contextualizedChunks[index],
-        })),
-      });
-
-      const region = await s3Client.config.region();
-
-      const fileUrl = `https://${params.Bucket}.s3.${region}.amazonaws.com/${params.Key}`;
-
-      insertDocumentEntry({
-        name: originalFile?.originalname,
-        caseId,
-        folderId,
-        title,
-        documentDate: date,
-        uploadedBy: userId,
-        description,
-        s3Url: fileUrl,
-      });
-
-      res.json({ fileUrl, text });
-    } catch (error) {
-      next(error);
+    if (!originalBuffer) {
+      res.status(400).send('No file uploaded.');
+      return;
     }
-  },
-);
+
+    const params = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `users/${userId}/case/${caseId}/folder/${folderId}/${originalFile.filename}`,
+      Body: originalBuffer,
+    };
+
+    await uploadBufferToS3({ params });
+
+    const contextualizedChunks = await splitBufferByToken({
+      buffer: originalBuffer,
+      metadata: {
+        title,
+        date,
+        description,
+        userId,
+        folderId,
+        caseId,
+      },
+      fileName: originalFile?.originalname,
+      chunkHeaderOptions: {
+        chunkHeader: `Title: ${title}\nDate: ${date}\nDescription: ${description}\nFileName: ${originalFile?.originalname}`,
+        chunkOverlapHeader: 'Overlap: ...',
+        appendChunkOverlapHeader: true,
+      },
+    });
+
+    const embeddedChunks: number[][] = await Embeddings.embedDocuments({
+      documents: contextualizedChunks,
+    });
+
+    await insertVectorDocumentsEntry({
+      entries: embeddedChunks.map((embeddedChunk, index) => ({
+        documentChunkEmbedding: embeddedChunk,
+        documentChunkOriginal: contextualizedChunks[index].pageContent,
+      })),
+    });
+
+    const fileUrl = await getS3FileUrl({
+      bucket: params.Bucket,
+      key: params.Key,
+    });
+
+    insertDocumentEntry({
+      name: originalFile?.originalname,
+      caseId,
+      folderId,
+      title,
+      documentDate: date,
+      uploadedBy: userId,
+      description,
+      s3Url: fileUrl,
+    });
+
+    res.json({ fileUrl, contextualizedChunks, embeddedChunks });
+  } catch (error: any) {
+    res.status(500).send(`Error uploading file: ${error.message}`);
+  }
+});
 
 filesRouter.get(
   '/documents/:userId/:caseId/:folderId/:name',
@@ -160,16 +130,11 @@ filesRouter.get('/documents/:userId/:caseId', async (req, res) => {
 filesRouter.get('/download', async (req, res) => {
   const filename = req.query.filename as string;
   try {
-    const response = await getS3Config().send(
-      new GetObjectCommand({
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: filename,
-      }),
-    );
-    const data = await streamToBuffer(response.Body as Readable);
+    const data = await downloadBufferFromS3({ filename });
+
     res.send(data);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    res.status(500).send('Error downloading the file.');
+    res.status(500).send(`Error downloading the file: ${error.message}`);
   }
 });

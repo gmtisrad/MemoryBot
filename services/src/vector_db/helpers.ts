@@ -2,7 +2,7 @@ import { MutationResult } from '@zilliz/milvus2-sdk-node';
 import { getMilvusClient } from './milvusInit';
 import {
   IInsertDocumentEntryArgs,
-  IInsertDocumentsEntryArgs,
+  IInsertVectorDocumentsEntryArgs,
   ISimilaritySearchArgs,
 } from './types';
 
@@ -33,9 +33,11 @@ export const insertDocumentEntry: (
   return insertResponse;
 };
 
-export const insertDocumentsEntry: (
-  args: IInsertDocumentsEntryArgs,
-) => Promise<MutationResult | undefined> = async ({ entries }) => {
+export const insertVectorDocumentsEntry: ({
+  entries,
+}: IInsertVectorDocumentsEntryArgs) => Promise<
+  MutationResult | undefined
+> = async ({ entries }) => {
   const client = getMilvusClient();
 
   let insertResponse;

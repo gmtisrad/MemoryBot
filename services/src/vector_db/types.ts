@@ -5,7 +5,7 @@ export interface IInsertDocumentEntryArgs {
   documentChunkOriginal: DataType.VarChar;
 }
 
-export interface IInsertDocumentsEntryArgs {
+export interface IInsertVectorDocumentsEntryArgs {
   entries: {
     documentChunkEmbedding: number[];
     documentChunkOriginal: string;
