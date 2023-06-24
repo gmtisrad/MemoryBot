@@ -13,6 +13,7 @@ import {
 } from '../db/helpers';
 import { splitBufferByToken } from '../langchain/documents';
 import { Embeddings } from '../langchain/embeddings';
+import { recursiveSummarize } from '../llm/helpers';
 
 export const filesRouter = express.Router();
 
@@ -35,6 +36,8 @@ filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
 
     await uploadBufferToS3({ params });
 
+    console.log('upload');
+
     const contextualizedChunks = await splitBufferByToken({
       buffer: originalBuffer,
       metadata: {
@@ -53,34 +56,43 @@ filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
       },
     });
 
-    const embeddedChunks: number[][] = await Embeddings.embedDocuments({
-      documents: contextualizedChunks,
+    console.log('split');
+
+    const summarizedDocument = await recursiveSummarize({
+      documentChunks: contextualizedChunks,
     });
 
-    await insertVectorDocumentsEntry({
-      entries: embeddedChunks.map((embeddedChunk, index) => ({
-        documentChunkEmbedding: embeddedChunk,
-        documentChunkOriginal: contextualizedChunks[index].pageContent,
-      })),
-    });
+    console.log('recursive sumamrize');
 
-    const fileUrl = await getS3FileUrl({
-      bucket: params.Bucket,
-      key: params.Key,
-    });
+    // const embeddedChunks: number[][] = await Embeddings.embedDocuments({
+    //   documents: contextualizedChunks,
+    // });
 
-    insertDocumentEntry({
-      name: originalFile?.originalname,
-      caseId,
-      folderId,
-      title,
-      documentDate: date,
-      uploadedBy: userId,
-      description,
-      s3Url: fileUrl,
-    });
+    // await insertVectorDocumentsEntry({
+    //   entries: embeddedChunks.map((embeddedChunk, index) => ({
+    //     documentChunkEmbedding: embeddedChunk,
+    //     documentChunkOriginal: contextualizedChunks[index].pageContent,
+    //   })),
+    // });
 
-    res.json({ fileUrl, contextualizedChunks, embeddedChunks });
+    // const fileUrl = await getS3FileUrl({
+    //   bucket: params.Bucket,
+    //   key: params.Key,
+    // });
+
+    // insertDocumentEntry({
+    //   name: originalFile?.originalname,
+    //   caseId,
+    //   folderId,
+    //   title,
+    //   documentDate: date,
+    //   uploadedBy: userId,
+    //   description,
+    //   s3Url: fileUrl,
+    // });
+
+    res.json({ summarizedDocument });
+    // res.json({ fileUrl, contextualizedChunks, embeddedChunks });
   } catch (error: any) {
     res.status(500).send(`Error uploading file: ${error.message}`);
   }

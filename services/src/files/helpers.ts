@@ -13,6 +13,19 @@ import { Readable } from 'stream';
 let _s3Client: S3Client | undefined;
 let _upload: multer.Multer | undefined;
 
+interface IUploadBufferToS3 {
+  params: PutObjectCommandInput;
+}
+
+interface IDownloadBufferFromS3 {
+  filename: string;
+}
+
+interface IGetS3FileUrl {
+  bucket?: string;
+  key?: string;
+}
+
 export const streamToBuffer = async (
   readableStream: Readable,
 ): Promise<Buffer> => {
@@ -82,10 +95,6 @@ export const handlePlaintext = async (buffer: Buffer) => {
   return text;
 };
 
-interface IUploadBufferToS3 {
-  params: PutObjectCommandInput;
-}
-
 export const uploadBufferToS3 = async ({
   params,
 }: IUploadBufferToS3): Promise<PutObjectCommandOutput> => {
@@ -99,10 +108,6 @@ export const uploadBufferToS3 = async ({
 
   return result;
 };
-
-interface IDownloadBufferFromS3 {
-  filename: string;
-}
 
 export const downloadBufferFromS3 = async ({
   filename,
@@ -123,11 +128,6 @@ export const downloadBufferFromS3 = async ({
 
   return data;
 };
-
-interface IGetS3FileUrl {
-  bucket?: string;
-  key?: string;
-}
 
 export const getS3FileUrl = async ({
   bucket,

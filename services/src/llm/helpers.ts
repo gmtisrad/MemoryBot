@@ -3,8 +3,18 @@ import {
   Configuration,
   OpenAIApi,
 } from 'openai';
+import { Document } from 'langchain/document';
+import {
+  getRecursiveSummarizePrompt,
+  getSummarizePrompt,
+} from '../langchain/templates';
+import { promptGPT35Turbo } from '../langchain/chatGPT';
 
 let _openAiClient: OpenAIApi | undefined;
+
+interface IRecursiveSummarize {
+  documentChunks: Document[];
+}
 
 export const getOpenAiClient = () => {
   if (!_openAiClient) {
@@ -44,4 +54,39 @@ export const createCompletion: (prompt: string) => any = async (
   }
 
   return completion.data;
+};
+
+export const recursiveSummarize = async ({
+  documentChunks,
+}: IRecursiveSummarize): Promise<string> => {
+  const summarizedDocument = await documentChunks.reduce(
+    async (accumulatorPromise: Promise<string>, chunk) => {
+      const accumulator = await accumulatorPromise;
+
+      // const summarizePrompt = await getSummarizePrompt({
+      //   text: `${accumulator}\n${chunk.pageContent}`,
+      // });
+
+      const summarizePrompt = await getRecursiveSummarizePrompt({
+        existingSummary: accumulator,
+        newBlock: chunk.pageContent,
+      });
+
+      console.log({ summarizePrompt });
+
+      const currentSummarization = await promptGPT35Turbo({
+        prompt: summarizePrompt,
+        temperature: 0.3,
+      });
+
+      console.log({ currentSummarization });
+
+      return currentSummarization;
+    },
+    Promise.resolve(''),
+  );
+
+  console.log({ summarizedDocument });
+
+  return summarizedDocument;
 };

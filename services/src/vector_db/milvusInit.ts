@@ -83,7 +83,7 @@ export const createSchema = async () => {
     params: JSON.stringify({ nlist: 1 }),
   };
 
-  const createdIndex = await client.createIndex({
+  await client.createIndex({
     collection_name: 'documents',
     field_name: 'document_chunk_embedding',
     extra_params: index_params,
