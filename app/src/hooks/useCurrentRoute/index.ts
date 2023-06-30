@@ -5,7 +5,5 @@ export const useCurrentPath = () => {
   const location = useLocation();
   const matches = matchRoutes(routes, location) || [];
 
-  console.log({ matches });
-
   return matches[0];
 };

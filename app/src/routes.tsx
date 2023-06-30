@@ -4,6 +4,7 @@ import { Generate } from './components/pages/Generate';
 import { Generated } from './components/pages/Generated';
 import { Home } from './components/pages/home';
 import { Partner } from './components/pages/partner';
+import { Documents } from './components/pages/Documents';
 
 const home = <Home />;
 
@@ -14,6 +15,8 @@ const partner = <Partner />;
 const generate = <Generate />;
 
 const generated = <Generated />;
+
+const documents = <Documents />;
 
 const partnerRoutes = [
   {
@@ -56,12 +59,12 @@ const caseRoutes = [
     element: cases,
   },
   {
-    path: '/cases/:caseId/folders/:folderId/files',
+    path: '/cases/:caseId/folders/:folderId/documents',
     element: cases,
   },
   {
-    path: '/cases/:caseId/folders/:folderId/files/:fileId',
-    element: cases,
+    path: '/cases/:caseId/folders/:folderId/documents/:documentId',
+    element: documents,
   },
 ];
 

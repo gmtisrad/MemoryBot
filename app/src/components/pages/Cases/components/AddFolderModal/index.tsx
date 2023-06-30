@@ -70,6 +70,20 @@ export const AddFolderModal: FC<IAddFolderModalProps> = ({
     return casesData?.cases.find((c: any) => c._id === caseId);
   }, [caseId, casesData?.cases]);
 
+  const flattenFolders = (folders: any) => {
+    let flatArray: any[] = [];
+
+    folders.forEach((folder: any) => {
+      flatArray.push(folder);
+
+      if (folder.folders) {
+        flatArray = [...flatArray, ...flattenFolders(folder.folders)];
+      }
+    });
+
+    return flatArray;
+  };
+
   return (
     <TakeoverModal open={open} toggleModalOpen={toggleModalOpen}>
       <Stack spacing={2}>
@@ -130,14 +144,12 @@ export const AddFolderModal: FC<IAddFolderModalProps> = ({
               onChange={handleParentFolderIdChange}
             >
               {!isCasesLoading &&
-                relevantCase?.folders.map(
-                  (folder: any) =>
-                    !folder.parent && (
-                      <MenuItem key={folder._id} value={folder._id}>
-                        {folder.name}
-                      </MenuItem>
-                    ),
-                )}
+                relevantCase?.folders &&
+                flattenFolders(relevantCase?.folders).map((folder: any) => (
+                  <MenuItem key={folder._id} value={folder._id}>
+                    {folder.name}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
         </Tooltip>

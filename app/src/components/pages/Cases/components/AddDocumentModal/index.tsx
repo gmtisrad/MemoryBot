@@ -60,7 +60,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
   }>();
 
   const [inputFile, setInputFile] = useState<File | null>(null);
-  const [documentTitle, setDocumentTitle] = useState<string>('');
   const [documentCaseId, setDocumentCaseId] = useState<string>(
     caseIdParam || '',
   );
@@ -78,7 +77,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
   });
 
   const { uploadDocument, isLoading: isDocumentUploading } = useUploadDocument({
-    title: documentTitle,
     date: documentDate?.valueOf().toString() || Date.now().toString(),
     caseId: caseIdParam || documentCaseId,
     folderId: documentFolderId,
@@ -88,18 +86,12 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
   });
 
   const uploadEnabled = useMemo(
-    () => documentTitle && (caseIdParam || documentCaseId) && inputFile,
-    [caseIdParam, documentCaseId, documentTitle, inputFile],
+    () => (caseIdParam || documentCaseId) && inputFile,
+    [caseIdParam, documentCaseId, inputFile],
   );
 
   const handleInputFileChange = (file: File | null) => {
     setInputFile(file);
-  };
-
-  const handleDocumentTitleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    setDocumentTitle(e.target.value);
   };
 
   const handleDocumentCaseIdChange = (e: SelectChangeEvent) => {
@@ -139,20 +131,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
               placeholder=".pdf, .docx, .txt..."
             />
           </div>
-        </Tooltip>
-        <Tooltip
-          enterNextDelay={500}
-          enterDelay={500}
-          title="Give your document a title. Max characters: 60"
-        >
-          <TextField
-            label="Document Title"
-            required
-            variant="outlined"
-            placeholder="Document Title..."
-            value={documentTitle}
-            onChange={handleDocumentTitleChange}
-          />
         </Tooltip>
         <Tooltip
           enterNextDelay={500}
@@ -246,7 +224,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
             setDocumentCaseId('');
             setDocumentDate(dayjs());
             setDocumentFolderId('');
-            setDocumentTitle('');
             setInputFile(null);
             toggleModalOpen(false);
           }}

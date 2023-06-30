@@ -30,6 +30,7 @@ import { useGetCases } from '../../../queries/useGetCases';
 import { Outlet, useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../shared/AppLink';
 import { StyledTreeItem } from './styled';
+import { RecursiveFolderTree } from './components/recursiveFolderTree/recursiveFolderTree';
 
 const containerStyles = {
   padding: { xs: '12px 6px', md: '48px' },
@@ -143,16 +144,6 @@ export const Page: FC<IPageProps> = () => {
                   }
                 />
               </ListItemButton>
-              {(() => {
-                // console.log({
-                //   currentPath,
-                //   pageTitle: page.title.toLowerCase(),
-                //   casesLength: cases.length,
-                //   isCasesLoading,
-                //   paths,
-                // });
-                return <div />;
-              })()}
               {location.pathname.includes(page.title.toLowerCase()) &&
                 'cases' == page.title.toLowerCase() &&
                 !!cases.length &&
@@ -183,69 +174,10 @@ export const Page: FC<IPageProps> = () => {
                               >
                                 {caseItem.folders.map((folder: any) => {
                                   return (
-                                    <AppLink
-                                      key={`folder-${folder._id}`}
-                                      href={`/cases/${caseItem._id}/folders/${folder._id}`}
-                                    >
-                                      <StyledTreeItem
-                                        key={folder._id}
-                                        nodeId={folder._id}
-                                        label={folder.name}
-                                      >
-                                        {folder.folders.map(
-                                          (subFolder: any) => {
-                                            return (
-                                              <AppLink
-                                                key={`folder-${folder._id}`}
-                                                href={`/cases/${caseItem._id}/folders/${subFolder._id}`}
-                                              >
-                                                <StyledTreeItem
-                                                  key={subFolder._id}
-                                                  nodeId={subFolder._id}
-                                                  label={subFolder.name}
-                                                >
-                                                  {subFolder.documents.map(
-                                                    (document: any) => {
-                                                      return (
-                                                        <AppLink
-                                                          key={`folder-${folder._id}`}
-                                                          href={`/cases/${caseItem._id}/folders/${subFolder._id}/documents/${document._id}`}
-                                                        >
-                                                          <StyledTreeItem
-                                                            key={document._id}
-                                                            nodeId={
-                                                              document._id
-                                                            }
-                                                            label={
-                                                              document.name
-                                                            }
-                                                            icon={
-                                                              <ArticleOutlined />
-                                                            }
-                                                          />
-                                                        </AppLink>
-                                                      );
-                                                    },
-                                                  )}
-                                                </StyledTreeItem>
-                                              </AppLink>
-                                            );
-                                          },
-                                        )}
-                                        {folder.documents.map(
-                                          (document: any) => {
-                                            return (
-                                              <StyledTreeItem
-                                                key={document._id}
-                                                nodeId={document._id}
-                                                label={document.name}
-                                                icon={<ArticleOutlined />}
-                                              />
-                                            );
-                                          },
-                                        )}
-                                      </StyledTreeItem>
-                                    </AppLink>
+                                    <RecursiveFolderTree
+                                      caseId={caseItem._id}
+                                      folder={folder}
+                                    />
                                   );
                                 })}
                                 {caseItem.documents.map((document: any) => {
