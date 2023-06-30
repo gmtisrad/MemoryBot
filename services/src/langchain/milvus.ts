@@ -78,15 +78,11 @@ export const textSimilaritySearch = async ({
   topP,
   query,
 }: similaritySearch): Promise<ChainValues> => {
-  console.log('Text Similarity Search');
-
   const model = new OpenAI({
     modelName: 'gpt-3.5-turbo',
     ...(temperature && { temperature }),
     ...(topP && { topP }),
   });
-
-  console.log('Model created');
 
   const chat = new ChatOpenAI({
     modelName: 'gpt-4',
@@ -94,11 +90,7 @@ export const textSimilaritySearch = async ({
     ...(topP && { topP }),
   });
 
-  console.log('Chat created');
-
   const baseCompressor = LLMChainExtractor.fromLLM(model);
-
-  console.log('Base compressor created');
 
   const dbConfig: MilvusLibArgs = {
     url: `${process.env.MILVUS_URL}:${process.env.MILVUS_PORT}`,
@@ -109,28 +101,18 @@ export const textSimilaritySearch = async ({
     modelName: process.env.OPENAI_EMBEDDING_MODEL,
   });
 
-  console.log('Embeddings created');
-
   const vectorStore = await Milvus.fromExistingCollection(embeddings, dbConfig);
-
-  console.log('Vector store created');
 
   const retriever = new ContextualCompressionRetriever({
     baseCompressor,
     baseRetriever: vectorStore.asRetriever(25),
   });
 
-  console.log('Retriever created');
-
   const chain = RetrievalQAChain.fromLLM(chat, retriever);
-
-  console.log('Chain created');
 
   const res = await chain.call({
     query,
   });
-
-  console.log('Chain called');
 
   return res;
 };

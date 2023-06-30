@@ -19,6 +19,7 @@ export const insertDocumentEntry: (
   folderId,
   caseId,
   title,
+  key,
 }) => {
   const mongoDB = await getDb();
 
@@ -34,6 +35,7 @@ export const insertDocumentEntry: (
       folderId: folderId ? new ObjectId(folderId) : null,
       caseId: new ObjectId(caseId),
       title,
+      key,
     });
 
   await mongoDB
@@ -47,18 +49,12 @@ export const insertDocumentEntry: (
 };
 
 export const getDocumentEntry: (args: IGetDocumentEntryArgs) => any = async ({
-  name,
-  folderId,
-  caseId,
-  userId,
+  documentId,
 }) => {
   const mongoDB = await getDb();
 
   const mongoRes = await mongoDB.collection('documents').findOne({
-    name,
-    folderId,
-    caseId,
-    uploadedBy: userId,
+    _id: new ObjectId(documentId),
   });
 
   return mongoRes;

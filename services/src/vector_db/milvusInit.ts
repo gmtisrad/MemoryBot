@@ -71,8 +71,6 @@ export const createSchema = async () => {
         );
       }
 
-      // console.log({ error_code, reason });
-
       return { error_code, reason };
     }),
   );

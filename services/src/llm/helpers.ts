@@ -82,16 +82,12 @@ export const recursiveSummarizeChunks = async ({
         new HumanChatMessage(summarizePrompt),
       ]);
 
-      console.log({ currentSummarization });
-
       return currentSummarization.text;
     },
     Promise.resolve(''),
   );
 
   // TODO: Add a final summarization step here. Doesn't seem to be necessary.
-
-  console.log({ summarizedDocument });
 
   return summarizedDocument;
 };
@@ -133,9 +129,8 @@ export const recursiveSummarizeBuffer = async ({
     Promise.resolve(''),
   );
 
-  // TODO: Add a final summarization step here. Doesn't seem to be necessary.
-
-  console.log({ summarizedDocument });
+  // TODO: Add a final summarization step here.
+  // NOTE: Doesn't seem to be necessary.
 
   return summarizedDocument;
 };

@@ -18,7 +18,7 @@ interface IUploadBufferToS3 {
 }
 
 interface IDownloadBufferFromS3 {
-  filename: string;
+  key: string;
 }
 
 interface IGetS3FileUrl {
@@ -110,16 +110,18 @@ export const uploadBufferToS3 = async ({
 };
 
 export const downloadBufferFromS3 = async ({
-  filename,
+  key,
 }: IDownloadBufferFromS3): Promise<Buffer> => {
   let data: Buffer;
+
   try {
     const response = await getS3Client().send(
       new GetObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: filename,
+        Key: key,
       }),
     );
+
     data = await streamToBuffer(response.Body as Readable);
   } catch (error: any) {
     console.log(error);

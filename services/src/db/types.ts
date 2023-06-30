@@ -7,13 +7,11 @@ export interface IInsertDocumentEntryArgs {
   folderId: string;
   title: string;
   caseId: string;
+  key: string;
 }
 
 export interface IGetDocumentEntryArgs {
-  name: string;
-  folderId: string;
-  caseId: string;
-  userId: string;
+  documentId: string;
 }
 
 export interface IGetCaseDocumentsArgs {

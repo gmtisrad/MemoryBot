@@ -18,30 +18,38 @@ import { getCase } from '../cases/helpers';
 export const filesRouter = express.Router();
 
 filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
-  const { title, date, userId, folderId, caseId } = req.body;
+  const { date, userId, folderId, caseId } = req.body;
   try {
     const originalFile = req.file;
     const originalBuffer = originalFile?.buffer;
 
     const relevantCase = await getCase({ caseId });
 
-    console.log({ relevantCase });
-
     if (!originalBuffer) {
       res.status(400).send('No file uploaded.');
       return;
     }
 
+    console.log({
+      userId,
+      caseId,
+      folderId,
+      fileName: originalFile.originalname,
+      originalFile,
+    });
+
+    const Key = `users/${userId}/case/${caseId}/folder/${folderId}/${originalFile.originalname}`;
+
     const params = {
       Bucket: process.env.S3_BUCKET_NAME,
-      Key: `users/${userId}/case/${caseId}/folder/${folderId}/${originalFile.filename}`,
+      Key,
       Body: originalBuffer,
     };
 
     await uploadBufferToS3({ params });
 
     const caseMetadata = {
-      title,
+      title: originalFile.originalname,
       date,
       userId,
       folderId,
@@ -49,7 +57,7 @@ filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
     };
 
     const caseChunkHeaders = {
-      chunkHeader: `Title: ${title}\nDate: ${date}\nFileName: ${originalFile?.originalname}\nCase Name: ${relevantCase.name}`,
+      chunkHeader: `Title: ${originalFile.originalname}\nDate: ${date}\nFileName: ${originalFile?.originalname}\nCase Name: ${relevantCase.name}\n`,
       chunkOverlapHeader: '\nOverlap: ...',
       appendChunkOverlapHeader: true,
     };
@@ -86,11 +94,12 @@ filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
       name: originalFile?.originalname,
       caseId,
       folderId,
-      title,
+      title: originalFile.originalname,
       documentDate: date,
       uploadedBy: userId,
       description: summarizedDocument,
       s3Url: fileUrl,
+      key: Key,
     });
 
     res.json({ summarizedDocument });
@@ -99,28 +108,20 @@ filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
   }
 });
 
-filesRouter.get(
-  '/documents/:userId/:caseId/:folderId/:name',
-  async (req, res) => {
-    const { userId, caseId, folderId, name } = req.params;
+filesRouter.get('/documents/:documentId', async (req, res) => {
+  const { documentId } = req.params;
 
-    let document;
+  let document;
 
-    try {
-      document = await getDocumentEntry({
-        userId,
-        caseId,
-        folderId,
-        name,
-      });
-    } catch (error) {
-      console.log(error);
-      res.status(500).send('Error retrieving the document.');
-    }
+  try {
+    document = await getDocumentEntry({ documentId });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send('Error retrieving the document.');
+  }
 
-    res.json({ document });
-  },
-);
+  res.json({ document });
+});
 
 filesRouter.get('/documents/:userId/:caseId', async (req, res) => {
   const { userId, caseId } = req.params;
@@ -140,12 +141,29 @@ filesRouter.get('/documents/:userId/:caseId', async (req, res) => {
   res.json({ documents });
 });
 
-filesRouter.get('/download', async (req, res) => {
-  const filename = req.query.filename as string;
-  try {
-    const data = await downloadBufferFromS3({ filename });
+filesRouter.get('/download/:documentId/uri', async (req, res) => {
+  const { documentId }: { documentId: string } = req.params;
 
-    res.send(data);
+  const document = await getDocumentEntry({ documentId });
+
+  if (!document) {
+    res.status(404).send('Document not found.');
+    return;
+  }
+
+  const { key } = document;
+
+  try {
+    const data = await downloadBufferFromS3({ key });
+
+    // Convert the buffer to a base64 string
+    const base64Data = Buffer.from(data).toString('base64');
+
+    // Create the data URI string
+    // const dataURI = base64Data;
+    const dataURI = `data:application/pdf;base64,${base64Data}`;
+
+    res.send({ url: dataURI });
   } catch (error: any) {
     console.error(error);
     res.status(500).send(`Error downloading the file: ${error.message}`);
