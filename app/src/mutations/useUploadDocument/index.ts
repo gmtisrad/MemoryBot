@@ -4,7 +4,6 @@ import { useCallback, useState } from 'react';
 interface IUseUploadDocumentArgs {
   title: string;
   date: string;
-  description: string;
   userId: string;
   folderId: string;
   caseId: string;
@@ -21,7 +20,6 @@ interface IUseUploadDocumentReturn {
 export const useUploadDocument = ({
   title,
   date,
-  description,
   userId,
   folderId,
   caseId,
@@ -37,7 +35,6 @@ export const useUploadDocument = ({
     formData.append('file', file!);
     formData.append('title', title);
     formData.append('date', date);
-    formData.append('description', description);
     formData.append('userId', userId);
     formData.append('folderId', folderId);
     formData.append('caseId', caseId);
@@ -46,7 +43,7 @@ export const useUploadDocument = ({
     setError(null);
 
     try {
-      await axios.post('/files/upload', formData, {
+      await axios.post('/api/files/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -57,7 +54,7 @@ export const useUploadDocument = ({
       setIsLoading(false);
       if (refetch) refetch();
     }
-  }, [file, title, date, description, userId, folderId, caseId, refetch]);
+  }, [file, title, date, userId, folderId, caseId, refetch]);
 
   return { isLoading, error, uploadDocument };
 };

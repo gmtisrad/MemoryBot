@@ -5,23 +5,27 @@ import {
   getUpload,
   uploadBufferToS3,
 } from './helpers';
-import { insertVectorDocumentsEntry } from '../vector_db/helpers';
 import {
   getCaseDocuments,
   getDocumentEntry,
   insertDocumentEntry,
 } from '../db/helpers';
-import { splitBufferByToken } from '../langchain/documents';
-import { Embeddings } from '../langchain/embeddings';
-import { recursiveSummarize } from '../llm/helpers';
+import { splitBufferByToken, splitTextByToken } from '../langchain/documents';
+import { recursiveSummarizeBuffer } from '../llm/helpers';
+import { embedAndStore } from '../langchain/milvus';
+import { getCase } from '../cases/helpers';
 
 export const filesRouter = express.Router();
 
 filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
-  const { title, date, description, userId, folderId, caseId } = req.body;
+  const { title, date, userId, folderId, caseId } = req.body;
   try {
     const originalFile = req.file;
     const originalBuffer = originalFile?.buffer;
+
+    const relevantCase = await getCase({ caseId });
+
+    console.log({ relevantCase });
 
     if (!originalBuffer) {
       res.status(400).send('No file uploaded.');
@@ -36,63 +40,60 @@ filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
 
     await uploadBufferToS3({ params });
 
-    console.log('upload');
+    const caseMetadata = {
+      title,
+      date,
+      userId,
+      folderId,
+      caseId,
+    };
+
+    const caseChunkHeaders = {
+      chunkHeader: `Title: ${title}\nDate: ${date}\nFileName: ${originalFile?.originalname}\nCase Name: ${relevantCase.name}`,
+      chunkOverlapHeader: '\nOverlap: ...',
+      appendChunkOverlapHeader: true,
+    };
 
     const contextualizedChunks = await splitBufferByToken({
       buffer: originalBuffer,
-      metadata: {
-        title,
-        date,
-        description,
-        userId,
-        folderId,
-        caseId,
-      },
+      metadata: caseMetadata,
       fileName: originalFile?.originalname,
-      chunkHeaderOptions: {
-        chunkHeader: `Title: ${title}\nDate: ${date}\nDescription: ${description}\nFileName: ${originalFile?.originalname}`,
-        chunkOverlapHeader: 'Overlap: ...',
-        appendChunkOverlapHeader: true,
-      },
+      chunkHeaderOptions: caseChunkHeaders,
     });
 
-    console.log('split');
-
-    const summarizedDocument = await recursiveSummarize({
-      documentChunks: contextualizedChunks,
+    const summarizedDocument = await recursiveSummarizeBuffer({
+      buffer: originalBuffer,
+      fileName: originalFile?.originalname,
     });
 
-    console.log('recursive sumamrize');
+    const summaryChunks = await splitTextByToken({
+      text: summarizedDocument,
+      metadata: caseMetadata,
+      chunkHeaderOptions: caseChunkHeaders,
+    });
 
-    // const embeddedChunks: number[][] = await Embeddings.embedDocuments({
-    //   documents: contextualizedChunks,
-    // });
+    await embedAndStore({
+      collection: `case_${caseId}`,
+      documents: [...contextualizedChunks, ...summaryChunks],
+    });
 
-    // await insertVectorDocumentsEntry({
-    //   entries: embeddedChunks.map((embeddedChunk, index) => ({
-    //     documentChunkEmbedding: embeddedChunk,
-    //     documentChunkOriginal: contextualizedChunks[index].pageContent,
-    //   })),
-    // });
+    const fileUrl = await getS3FileUrl({
+      bucket: params.Bucket,
+      key: params.Key,
+    });
 
-    // const fileUrl = await getS3FileUrl({
-    //   bucket: params.Bucket,
-    //   key: params.Key,
-    // });
-
-    // insertDocumentEntry({
-    //   name: originalFile?.originalname,
-    //   caseId,
-    //   folderId,
-    //   title,
-    //   documentDate: date,
-    //   uploadedBy: userId,
-    //   description,
-    //   s3Url: fileUrl,
-    // });
+    insertDocumentEntry({
+      name: originalFile?.originalname,
+      caseId,
+      folderId,
+      title,
+      documentDate: date,
+      uploadedBy: userId,
+      description: summarizedDocument,
+      s3Url: fileUrl,
+    });
 
     res.json({ summarizedDocument });
-    // res.json({ fileUrl, contextualizedChunks, embeddedChunks });
   } catch (error: any) {
     res.status(500).send(`Error uploading file: ${error.message}`);
   }

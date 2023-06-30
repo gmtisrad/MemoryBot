@@ -103,3 +103,13 @@ export const insertVectorDocumentEntry: (
 
   return { acknowledged, insertedId };
 };
+
+export const getCase = async ({ caseId }: { caseId: string }): Promise<any> => {
+  const mongoDB = await getDb();
+
+  const mongoRes = await mongoDB.collection('cases').findOne({
+    _id: new ObjectId(caseId),
+  });
+
+  return mongoRes;
+};

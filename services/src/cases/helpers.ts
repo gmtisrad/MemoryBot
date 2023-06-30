@@ -146,7 +146,7 @@ export const getCase: (args: IGetCaseArgs) => any = async ({ caseId }) => {
 
   return {
     _id: caseRes._id,
-    name: caseRes.caseName,
+    name: caseRes.name,
     folders: rootFolders,
     documents: caseDocuments.filter((doc) => doc.folderId === null),
   };

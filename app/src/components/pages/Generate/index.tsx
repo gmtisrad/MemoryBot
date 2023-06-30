@@ -33,7 +33,7 @@ export const Generate: FC = () => {
   const [partyB, setPartyB] = useState<string>('');
 
   const { data, isLoading, error, generateDocument } = useGenerateDocument({
-    userId: '6483e65fd24b426cd772ce1c',
+    userId: '649648ac4cea1cc6acc1e35e',
     caseId,
     caseDetails,
     numResults,

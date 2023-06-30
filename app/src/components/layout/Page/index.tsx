@@ -24,34 +24,16 @@ import {
   Work,
 } from '@mui/icons-material';
 import TreeView from '@mui/lab/TreeView';
-import { TreeItem } from '@mui/lab';
-import { styled } from 'styled-components';
 import { LinkBehavior } from '../../utilities/LinkBehavior';
 import { useCurrentPath } from '../../../hooks/useCurrentPath';
 import { useGetCases } from '../../../queries/useGetCases';
 import { Outlet, useLocation, useParams } from 'react-router-dom';
-
-const StyledTreeItem = styled(TreeItem)`
-  font-size: 12px;
-  .MuiTreeItem-label {
-    font-size: 0.8rem;
-  }
-  .MuiTreeItem-content {
-    padding-top: 6px;
-    padding-bottom: 6px;
-    padding-left: 18px;
-  }
-`;
-
-const AppLink = styled(LinkBehavior)`
-  text-decoration: none;
-  color: inherit;
-`;
+import { AppLink } from '../../shared/AppLink';
+import { StyledTreeItem } from './styled';
 
 const containerStyles = {
   padding: { xs: '12px 6px', md: '48px' },
   flex: 1,
-  // backgroundColor: 'var(--joy-palette-neutral-100, #EBEBEF)',
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -91,13 +73,11 @@ export const Page: FC<IPageProps> = () => {
   const {
     isLoading: isCasesLoading,
     data: { cases },
-    error: casesError,
-  } = useGetCases({ userId: '6483e65fd24b426cd772ce1c' });
+  } = useGetCases({ userId: '649648ac4cea1cc6acc1e35e' });
 
   const paths = useCurrentPath();
 
   const currentPath = useMemo(() => {
-    console.log({ paths, pathLength: paths.length });
     const base = paths[paths.length - 1].pathname;
     return base;
   }, [paths]);

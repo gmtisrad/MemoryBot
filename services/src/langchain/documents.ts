@@ -31,7 +31,7 @@ interface SplitRawTextByTokenInput {
   chunkHeaderOptions?: TextSplitterChunkHeaderOptions;
 }
 
-interface splitBufferByToken {
+interface SplitBufferByToken {
   buffer: Buffer;
   metadata?: Record<string, unknown>;
   fileName?: string;
@@ -98,7 +98,7 @@ export const splitBufferByToken = async ({
   metadata,
   fileName,
   chunkHeaderOptions,
-}: splitBufferByToken): Promise<Document[]> => {
+}: SplitBufferByToken): Promise<Document[]> => {
   // Determine the file type based on its extension
   const extension = fileName ? path.extname(fileName).toLowerCase() : null;
 

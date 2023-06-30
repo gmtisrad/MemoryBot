@@ -14,7 +14,7 @@ import { casesRouter } from './src/cases';
 import { llmRouter } from './src/llm';
 import { chatsRouter } from './src/chats';
 
-const PORT = 3000;
+const PORT = 3001;
 
 (async () => {
   const app = express();

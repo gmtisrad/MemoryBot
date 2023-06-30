@@ -4,7 +4,6 @@ import {
   CircularProgress,
   FormControl,
   InputLabel,
-  Menu,
   MenuItem,
   Select,
   SelectChangeEvent,
@@ -62,7 +61,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
 
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [documentTitle, setDocumentTitle] = useState<string>('');
-  const [documentDescription, setDocumentDescription] = useState<string>('');
   const [documentCaseId, setDocumentCaseId] = useState<string>(
     caseIdParam || '',
   );
@@ -76,23 +74,22 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
     data: casesData,
     refetch,
   } = useGetCases({
-    userId: '6483e65fd24b426cd772ce1c',
+    userId: '649648ac4cea1cc6acc1e35e',
   });
 
   const { uploadDocument, isLoading: isDocumentUploading } = useUploadDocument({
     title: documentTitle,
     date: documentDate?.valueOf().toString() || Date.now().toString(),
-    description: documentDescription,
-    caseId: documentCaseId,
+    caseId: caseIdParam || documentCaseId,
     folderId: documentFolderId,
-    userId: '6483e65fd24b426cd772ce1c',
+    userId: '649648ac4cea1cc6acc1e35e',
     file: inputFile,
     refetch,
   });
 
   const uploadEnabled = useMemo(
-    () => documentTitle && documentDescription && documentCaseId && inputFile,
-    [documentCaseId, documentDescription, documentTitle, inputFile],
+    () => documentTitle && (caseIdParam || documentCaseId) && inputFile,
+    [caseIdParam, documentCaseId, documentTitle, inputFile],
   );
 
   const handleInputFileChange = (file: File | null) => {
@@ -103,12 +100,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setDocumentTitle(e.target.value);
-  };
-
-  const handleDocumentDescriptionChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    setDocumentDescription(e.target.value);
   };
 
   const handleDocumentCaseIdChange = (e: SelectChangeEvent) => {
@@ -161,25 +152,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
             placeholder="Document Title..."
             value={documentTitle}
             onChange={handleDocumentTitleChange}
-          />
-        </Tooltip>
-        <Tooltip
-          enterNextDelay={500}
-          enterDelay={500}
-          title="Describe your document. Include things like names, document type and intent. Max characters: 120"
-        >
-          <TextField
-            label={
-              <Typography component="span" variant="body1">
-                Document Description
-              </Typography>
-            }
-            required
-            multiline
-            variant="outlined"
-            placeholder="Document Description..."
-            value={documentDescription}
-            onChange={handleDocumentDescriptionChange}
           />
         </Tooltip>
         <Tooltip
@@ -273,7 +245,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
             await uploadDocument();
             setDocumentCaseId('');
             setDocumentDate(dayjs());
-            setDocumentDescription('');
             setDocumentFolderId('');
             setDocumentTitle('');
             setInputFile(null);

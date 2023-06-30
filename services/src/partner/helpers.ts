@@ -73,13 +73,13 @@ export const promptOpenAI = async ({
   const response = completion.choices[0].message.content;
 
   const newMessage: IMessage = {
-    id: new ObjectId(),
+    _id: new ObjectId(),
     isUser: true,
     content: prompt,
   };
 
   const responseMessage: IMessage = {
-    id: new ObjectId(),
+    _id: new ObjectId(),
     isUser: false,
     content: response,
   };

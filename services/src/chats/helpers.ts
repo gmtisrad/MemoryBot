@@ -7,6 +7,7 @@ import {
   IInsertMessageResponse,
 } from './types';
 import { getDb } from '../db/mongoInit';
+import { ObjectId } from 'mongodb';
 
 export const createChat: (
   args: ICreateChatArgs,
@@ -59,4 +60,14 @@ export const getChats: (
   const chats = await db.collection('chats').find({ userId }).toArray();
 
   return { chats };
+};
+
+export const getChat = async ({ chatId }: { chatId: string }) => {
+  const db = await getDb();
+
+  const chat = await db
+    .collection('chats')
+    .findOne({ _id: new ObjectId(chatId) });
+
+  return { chat };
 };

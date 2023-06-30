@@ -27,7 +27,7 @@ export interface IGetChatsResponse {
 }
 
 export interface IMessage {
-  id: ObjectId;
+  _id: ObjectId;
   isUser: boolean;
   content: string;
 }

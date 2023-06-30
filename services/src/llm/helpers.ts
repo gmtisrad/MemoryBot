@@ -4,16 +4,20 @@ import {
   OpenAIApi,
 } from 'openai';
 import { Document } from 'langchain/document';
-import {
-  getRecursiveSummarizePrompt,
-  getSummarizePrompt,
-} from '../langchain/templates';
-import { promptGPT35Turbo } from '../langchain/chatGPT';
+import { getRecursiveSummarizeChunksPrompt } from '../langchain/templates';
+import { splitBufferByToken } from '../langchain/documents';
+import { ChatOpenAI } from 'langchain/chat_models/openai';
+import { HumanChatMessage } from 'langchain/schema';
 
 let _openAiClient: OpenAIApi | undefined;
 
-interface IRecursiveSummarize {
+interface IRecursiveSummarizeChunks {
   documentChunks: Document[];
+}
+
+interface IRecursiveSummarizeBuffer {
+  buffer: Buffer;
+  fileName: string;
 }
 
 export const getOpenAiClient = () => {
@@ -56,35 +60,80 @@ export const createCompletion: (prompt: string) => any = async (
   return completion.data;
 };
 
-export const recursiveSummarize = async ({
+export const recursiveSummarizeChunks = async ({
   documentChunks,
-}: IRecursiveSummarize): Promise<string> => {
+}: IRecursiveSummarizeChunks): Promise<string> => {
+  const chat = new ChatOpenAI({
+    modelName: 'gpt-3.5-turbo',
+    temperature: 0.15,
+    topP: 0.15,
+  });
+
   const summarizedDocument = await documentChunks.reduce(
     async (accumulatorPromise: Promise<string>, chunk) => {
       const accumulator = await accumulatorPromise;
 
-      // const summarizePrompt = await getSummarizePrompt({
-      //   text: `${accumulator}\n${chunk.pageContent}`,
-      // });
-
-      const summarizePrompt = await getRecursiveSummarizePrompt({
+      const summarizePrompt = await getRecursiveSummarizeChunksPrompt({
         existingSummary: accumulator,
         newBlock: chunk.pageContent,
       });
 
-      console.log({ summarizePrompt });
-
-      const currentSummarization = await promptGPT35Turbo({
-        prompt: summarizePrompt,
-        temperature: 0.3,
-      });
+      const currentSummarization = await chat.call([
+        new HumanChatMessage(summarizePrompt),
+      ]);
 
       console.log({ currentSummarization });
 
-      return currentSummarization;
+      return currentSummarization.text;
     },
     Promise.resolve(''),
   );
+
+  // TODO: Add a final summarization step here. Doesn't seem to be necessary.
+
+  console.log({ summarizedDocument });
+
+  return summarizedDocument;
+};
+
+/* 
+  Implemented using a single chat instance as opposed to instantiating one for each call.
+  Significantly faster.
+*/
+export const recursiveSummarizeBuffer = async ({
+  buffer,
+  fileName,
+}: IRecursiveSummarizeBuffer): Promise<string> => {
+  const documentChunks = await splitBufferByToken({
+    buffer,
+    fileName,
+  });
+
+  const chat = new ChatOpenAI({
+    modelName: 'gpt-3.5-turbo',
+    temperature: 0.15,
+    topP: 0.15,
+  });
+
+  const summarizedDocument = await documentChunks.reduce(
+    async (accumulatorPromise: Promise<string>, chunk) => {
+      const accumulator = await accumulatorPromise;
+
+      const summarizePrompt = await getRecursiveSummarizeChunksPrompt({
+        existingSummary: accumulator,
+        newBlock: chunk.pageContent,
+      });
+
+      const currentSummarization = await chat.call([
+        new HumanChatMessage(summarizePrompt),
+      ]);
+
+      return currentSummarization.text;
+    },
+    Promise.resolve(''),
+  );
+
+  // TODO: Add a final summarization step here. Doesn't seem to be necessary.
 
   console.log({ summarizedDocument });
 

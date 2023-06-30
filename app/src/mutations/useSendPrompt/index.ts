@@ -32,7 +32,7 @@ export const useSendPrompt: (
     setIsLoading(true);
     let _response;
     try {
-      _response = await fetch('/api/partner/prompt', {
+      _response = await fetch('/api/partner/chat/prompt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,8 +47,6 @@ export const useSendPrompt: (
       });
       const data = await _response.json();
       setData(data);
-
-      console.log({ data });
       return data.response;
     } catch (error) {
       setError(error);

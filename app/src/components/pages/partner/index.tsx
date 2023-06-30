@@ -73,7 +73,7 @@ export const Partner: FC = () => {
     isLoading: isCasesLoading,
     data: casesData,
     error: casesError,
-  } = useGetCases({ userId: '6483e65fd24b426cd772ce1c' });
+  } = useGetCases({ userId: '649648ac4cea1cc6acc1e35e' });
 
   const { sendPrompt } = useSendPrompt({
     prompt,
@@ -97,6 +97,7 @@ export const Partner: FC = () => {
     ]);
     setPrompt('');
     const response = await sendPrompt();
+
     setPreviousMessages((prevMessages) => [
       ...prevMessages,
       { content: response },
