@@ -18,7 +18,7 @@ import { getCase } from '../cases/helpers';
 export const filesRouter = express.Router();
 
 filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
-  const { date, userId, folderId, caseId } = req.body;
+  const { userId, folderId, caseId } = req.body;
   try {
     const originalFile = req.file;
     const originalBuffer = originalFile?.buffer;
@@ -48,6 +48,8 @@ filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
 
     await uploadBufferToS3({ params });
 
+    const date = new Date().toISOString();
+
     const caseMetadata = {
       title: originalFile.originalname,
       date,
@@ -57,7 +59,7 @@ filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
     };
 
     const caseChunkHeaders = {
-      chunkHeader: `Title: ${originalFile.originalname}\nDate: ${date}\nFileName: ${originalFile?.originalname}\nCase Name: ${relevantCase.name}\n`,
+      chunkHeader: `Title: ${originalFile.originalname}\nFileName: ${originalFile?.originalname}\nCase Name: ${relevantCase.name}\n`,
       chunkOverlapHeader: '\nOverlap: ...',
       appendChunkOverlapHeader: true,
     };

@@ -2,7 +2,6 @@ import axios from 'axios';
 import { useCallback, useState } from 'react';
 
 interface IUseUploadDocumentArgs {
-  date: string;
   userId: string;
   folderId: string;
   caseId: string;
@@ -17,7 +16,6 @@ interface IUseUploadDocumentReturn {
 }
 
 export const useUploadDocument = ({
-  date,
   userId,
   folderId,
   caseId,
@@ -31,7 +29,6 @@ export const useUploadDocument = ({
     const formData = new FormData();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     formData.append('file', file!);
-    formData.append('date', date);
     formData.append('userId', userId);
     formData.append('folderId', folderId);
     formData.append('caseId', caseId);
@@ -51,7 +48,7 @@ export const useUploadDocument = ({
       setIsLoading(false);
       if (refetch) refetch();
     }
-  }, [file, date, userId, folderId, caseId, refetch]);
+  }, [file, userId, folderId, caseId, refetch]);
 
   return { isLoading, error, uploadDocument };
 };

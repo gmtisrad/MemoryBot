@@ -66,6 +66,10 @@ const caseRoutes = [
     path: '/cases/:caseId/folders/:folderId/documents/:documentId',
     element: documents,
   },
+  {
+    path: '/cases/:caseId/documents/:documentId',
+    element: documents,
+  },
 ];
 
 export const routes = [

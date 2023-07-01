@@ -33,8 +33,9 @@ import { StyledTreeItem } from './styled';
 import { RecursiveFolderTree } from './components/recursiveFolderTree/recursiveFolderTree';
 
 const containerStyles = {
-  padding: { xs: '12px 6px', md: '48px' },
+  padding: { xs: '12px 6px', md: '0' },
   flex: 1,
+  overflow: 'auto',
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -182,12 +183,16 @@ export const Page: FC<IPageProps> = () => {
                                 })}
                                 {caseItem.documents.map((document: any) => {
                                   return (
-                                    <StyledTreeItem
+                                    <AppLink
                                       key={document._id}
-                                      nodeId={document._id}
-                                      label={document.name}
-                                      icon={<ArticleOutlined />}
-                                    />
+                                      href={`/cases/${caseItem._id}/documents/${document._id}`}
+                                    >
+                                      <StyledTreeItem
+                                        nodeId={document._id}
+                                        label={document.name}
+                                        icon={<ArticleOutlined />}
+                                      />
+                                    </AppLink>
                                   );
                                 })}
                               </StyledTreeItem>

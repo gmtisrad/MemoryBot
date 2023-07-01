@@ -88,7 +88,7 @@ export const AddFolderModal: FC<IAddFolderModalProps> = ({
     <TakeoverModal open={open} toggleModalOpen={toggleModalOpen}>
       <Stack spacing={2}>
         <Typography alignContent={'center'} variant="h5">
-          Folders
+          Add Folder
         </Typography>
         {!caseIdParam && (
           <Tooltip
@@ -122,37 +122,39 @@ export const AddFolderModal: FC<IAddFolderModalProps> = ({
             </FormControl>
           </Tooltip>
         )}
-        <Tooltip
-          enterNextDelay={500}
-          enterDelay={500}
-          title="Where to add the folder?"
-        >
-          <FormControl variant="outlined" fullWidth>
-            <InputLabel
-              sx={{ backgroundColor: '#f7f7f8' }}
-              id="parent-folder-id-label"
-            >
-              Which folder?
-            </InputLabel>
-            <Select
-              labelId="parent-folder-id-label"
-              id="parent-folder-id"
-              multiline
-              disabled={!relevantCase}
-              placeholder="Folder Name..."
-              value={parentFolderId}
-              onChange={handleParentFolderIdChange}
-            >
-              {!isCasesLoading &&
-                relevantCase?.folders &&
-                flattenFolders(relevantCase?.folders).map((folder: any) => (
-                  <MenuItem key={folder._id} value={folder._id}>
-                    {folder.name}
-                  </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
-        </Tooltip>
+        {!!relevantCase?.folders.length && (
+          <Tooltip
+            enterNextDelay={500}
+            enterDelay={500}
+            title="Where to add the folder?"
+          >
+            <FormControl variant="outlined" fullWidth>
+              <InputLabel
+                sx={{ backgroundColor: '#f7f7f8' }}
+                id="parent-folder-id-label"
+              >
+                Which folder?
+              </InputLabel>
+              <Select
+                labelId="parent-folder-id-label"
+                id="parent-folder-id"
+                multiline
+                disabled={!relevantCase}
+                placeholder="Folder Name..."
+                value={parentFolderId}
+                onChange={handleParentFolderIdChange}
+              >
+                {!isCasesLoading &&
+                  relevantCase?.folders &&
+                  flattenFolders(relevantCase?.folders).map((folder: any) => (
+                    <MenuItem key={folder._id} value={folder._id}>
+                      {folder.name}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </Tooltip>
+        )}
         <Tooltip
           enterNextDelay={500}
           enterDelay={500}

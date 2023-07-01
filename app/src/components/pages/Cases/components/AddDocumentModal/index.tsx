@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useMemo, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 import {
   Button,
   CircularProgress,
@@ -8,7 +8,6 @@ import {
   Select,
   SelectChangeEvent,
   Stack,
-  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -18,8 +17,6 @@ import {
 import { MuiFileInput } from 'mui-file-input';
 import { useGetCases } from '../../../../../queries/useGetCases';
 import { useUploadDocument } from '../../../../../mutations/useUploadDocument';
-import { DatePicker } from '@mui/x-date-pickers';
-import dayjs, { Dayjs } from 'dayjs';
 import { TakeoverModal } from '../../../../shared/TakeoverModal';
 import { useParams } from 'react-router-dom';
 
@@ -66,7 +63,8 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
   const [documentFolderId, setDocumentFolderId] = useState<string>(
     folderIdParam || '',
   );
-  const [documentDate, setDocumentDate] = useState<Dayjs | null>(dayjs());
+
+  console.log({ folderIdParam, caseIdParam });
 
   const {
     isLoading: isCasesLoading,
@@ -77,7 +75,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
   });
 
   const { uploadDocument, isLoading: isDocumentUploading } = useUploadDocument({
-    date: documentDate?.valueOf().toString() || Date.now().toString(),
     caseId: caseIdParam || documentCaseId,
     folderId: documentFolderId,
     userId: '649648ac4cea1cc6acc1e35e',
@@ -104,10 +101,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
     setDocumentFolderId(e.target.value);
   };
 
-  const handleDocumentDateChange = (value: Dayjs | null) => {
-    setDocumentDate(value);
-  };
-
   const relevantCase = useMemo(() => {
     return casesData?.cases.find((c: any) => c._id === documentCaseId);
   }, [casesData?.cases, documentCaseId]);
@@ -129,25 +122,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
               value={inputFile}
               onChange={handleInputFileChange}
               placeholder=".pdf, .docx, .txt..."
-            />
-          </div>
-        </Tooltip>
-        <Tooltip
-          enterNextDelay={500}
-          enterDelay={500}
-          title="What is this document's creation date?"
-        >
-          <div>
-            <DatePicker
-              label={
-                <Typography component="span" variant="body1">
-                  Document Date
-                </Typography>
-              }
-              value={documentDate}
-              onChange={handleDocumentDateChange}
-              maxDate={dayjs()}
-              sx={{ width: '100%' }}
             />
           </div>
         </Tooltip>
@@ -222,7 +196,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
           onClick={async () => {
             await uploadDocument();
             setDocumentCaseId('');
-            setDocumentDate(dayjs());
             setDocumentFolderId('');
             setInputFile(null);
             toggleModalOpen(false);
