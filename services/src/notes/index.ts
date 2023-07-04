@@ -36,7 +36,6 @@ notesRouter.post('/create', async (req, res) => {
 
 notesRouter.post('/update', async (req, res) => {
   const { _id, ...rest } = req.body;
-  console.log({ _id, ...rest });
 
   let updateNoteRes;
 

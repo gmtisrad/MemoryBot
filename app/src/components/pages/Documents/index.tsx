@@ -18,9 +18,9 @@ import { useGetDocument } from '../../../queries/useGetDocument';
 export const Documents: FC = () => {
   const { documentId } = useParams<{ documentId: string }>();
 
-  const { data: documentEntry } = useGetDocument({ documentId });
+  const { data: documentEntry, isLoading } = useGetDocument({ documentId });
 
-  const { data } = useGetBase64PDF({ documentId });
+  const { data, isLoading: isUriLoading } = useGetBase64PDF({ documentId });
 
   const docs = useMemo(
     () => [{ uri: data?.url || '', fileName: documentEntry?.document?.name }],

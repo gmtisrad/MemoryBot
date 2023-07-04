@@ -33,6 +33,7 @@ export const createCaseFolder: (args: ICreateCaseFolderArgs) => any = async ({
   caseId,
   folderName,
   parent,
+  type,
 }) => {
   const mongoDB = await getDb();
 
@@ -42,6 +43,7 @@ export const createCaseFolder: (args: ICreateCaseFolderArgs) => any = async ({
       name: folderName,
       parent,
       caseId: new ObjectId(caseId),
+      type,
     });
 
   const caseQuery = { _id: new ObjectId(caseId) };

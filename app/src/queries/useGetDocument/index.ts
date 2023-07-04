@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useMemo } from 'react';
 import { useQuery } from 'react-query';
 
 interface UseGetDocumentArgs {
@@ -15,9 +16,17 @@ interface UseGetDocumentResponse {
 export const useGetDocument: (
   args: UseGetDocumentArgs,
 ) => UseGetDocumentResponse = ({ documentId }) => {
-  const { isLoading, error, data, refetch } = useQuery('chats', async () => {
-    const documentRes = await axios.get(`/api/files/documents/${documentId}`);
-    return documentRes.data;
+  const memoizedDocumentId = useMemo(() => documentId, [documentId]);
+  const { isLoading, error, data, refetch } = useQuery({
+    queryKey: 'chats',
+    queryFn: async () => {
+      const documentRes = await axios.get(
+        `/api/files/documents/${memoizedDocumentId}`,
+      );
+      return documentRes.data;
+    },
+    refetchInterval: Infinity,
+    refetchOnWindowFocus: false,
   });
   return { isLoading, error, data: data || { document: [] }, refetch };
 };

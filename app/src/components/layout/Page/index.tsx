@@ -30,7 +30,44 @@ import { useGetCases } from '../../../queries/useGetCases';
 import { Outlet, useLocation, useParams } from 'react-router-dom';
 import { AppLink } from '../../shared/AppLink';
 import { StyledTreeItem } from './styled';
-import { RecursiveFolderTree } from './components/recursiveFolderTree/recursiveFolderTree';
+import { RecursiveFolderTree } from './components/recursiveFolderTree';
+import { AddCaseModal } from '../../pages/Cases/components/AddCaseModal';
+import { AddFolderModal } from '../../pages/Cases/components/AddFolderModal';
+import { AddDocumentModal } from '../../pages/Cases/components/AddDocumentModal';
+import { useAppStore } from '../../../zustand/app';
+import { NestableSubTreeItemLabel } from './components/nestableSubTreeItemLabel';
+
+function getAllParents({
+  folders,
+  folderId,
+}: {
+  folders: any[];
+  folderId?: string;
+}) {
+  const parents: any[] = [];
+
+  console.log({ folders, folderId });
+
+  if (!folderId) {
+    return parents;
+  }
+
+  let currentFolder = folders?.find((folder) => folder._id === folderId);
+
+  while (currentFolder && currentFolder.parent !== null) {
+    const parentFolder = folders.find(
+      (folder) => folder._id === currentFolder.parent,
+    );
+    if (parentFolder) {
+      parents.push(parentFolder);
+      currentFolder = parentFolder;
+    } else {
+      break;
+    }
+  }
+
+  return parents;
+}
 
 const containerStyles = {
   flex: 1,
@@ -63,21 +100,28 @@ const pages = [
   { title: 'Partner', icon: <SmartToy /> },
 ];
 
+const flattenFolders = ({ folders }: { folders?: any[] }) => {
+  const flat: any[] = [];
+
+  const traverse = (folder: any) => {
+    flat.push(folder);
+    if (folder.folders && folder.folders.length > 0) {
+      for (const subFolder of folder.folders) {
+        traverse(subFolder);
+      }
+    }
+  };
+
+  folders?.forEach(traverse);
+  return flat;
+};
+
 export const Page: FC<IPageProps> = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { chatId, caseId, folderId, documentId } = useParams();
+  const { chatId, caseId, folderId, documentId, noteId } = useParams();
+  const { pathname } = useLocation();
 
-  const selected = useMemo(() => [documentId, chatId], [chatId, documentId]);
-
-  const expanded = useMemo(
-    () =>
-      [caseId, folderId, ...(caseId ? [`files-${caseId}-all`] : [])].filter(
-        (o) => !!o,
-      ),
-    [caseId, folderId],
-  );
-
-  console.log({ expanded });
+  const isNotesPath = pathname.includes('/notes');
 
   const location = useLocation();
 
@@ -88,6 +132,39 @@ export const Page: FC<IPageProps> = () => {
     isLoading: isCasesLoading,
     data: { cases },
   } = useGetCases({ userId: '649648ac4cea1cc6acc1e35e' });
+
+  const selected = useMemo(() => [documentId, chatId], [chatId, documentId]);
+
+  const caseFolders = useMemo(() => {
+    return cases.find((c: any) => c._id === caseId)?.folders;
+  }, [caseId, cases]);
+
+  const flattenedCaseFolders = useMemo(() => {
+    return flattenFolders({ folders: caseFolders });
+  }, [caseFolders]);
+
+  const allParentIds = useMemo(() => {
+    const allParentFolders = getAllParents({
+      folders: flattenedCaseFolders,
+      folderId,
+    });
+    console.log({ allParentFolders });
+    return allParentFolders.map((folder) => folder?._id);
+  }, [flattenedCaseFolders, folderId]);
+
+  const expanded = useMemo(
+    () =>
+      [
+        caseId,
+        folderId,
+        ...(folderId && cases.length ? allParentIds : []),
+        ...(caseId ? [`files-${caseId}-all`] : []),
+        ...(isNotesPath || noteId ? [`notes-${caseId}-all`] : []),
+      ].filter((o) => !!o),
+    [allParentIds, caseId, cases.length, folderId, isNotesPath, noteId],
+  );
+
+  console.log({ expanded });
 
   const paths = useCurrentPath();
 
@@ -185,16 +262,20 @@ export const Page: FC<IPageProps> = () => {
                               <StyledTreeItem
                                 key={`files-${caseItem._id}-all`}
                                 nodeId={`files-${caseItem._id}-all`}
-                                label="Documents"
+                                label={
+                                  <NestableSubTreeItemLabel
+                                    caseId={caseItem._id}
+                                    label="Documents"
+                                  />
+                                }
                               >
-                                {caseItem.folders.map((folder: any) => {
-                                  return (
-                                    <RecursiveFolderTree
-                                      caseId={caseItem._id}
-                                      folder={folder}
-                                    />
-                                  );
-                                })}
+                                {caseItem.folders
+                                  .filter((f: any) => f.type === 'documents')
+                                  .map((folder: any) => {
+                                    return (
+                                      <RecursiveFolderTree folder={folder} />
+                                    );
+                                  })}
                                 {caseItem.documents.map((document: any) => {
                                   return (
                                     <AppLink
@@ -215,12 +296,23 @@ export const Page: FC<IPageProps> = () => {
                               <StyledTreeItem
                                 key={`notes-${caseItem._id}-all`}
                                 nodeId={`notes-${caseItem._id}-all`}
-                                label="Notes"
+                                label={
+                                  <NestableSubTreeItemLabel
+                                    caseId={caseItem._id}
+                                    label="Notes"
+                                  />
+                                }
                               >
                                 {/* Dummy component to show notes is a sub-tree */}
                                 <div></div>
+                                {caseItem.folders
+                                  .filter((f: any) => f.type === 'notes')
+                                  .map((folder: any) => {
+                                    return (
+                                      <RecursiveFolderTree folder={folder} />
+                                    );
+                                  })}
                                 {caseItem?.notes?.map((note: any) => {
-                                  console.log({ note });
                                   return (
                                     <AppLink
                                       key={`case-notes-${note._id}`}
@@ -345,8 +437,18 @@ export const Page: FC<IPageProps> = () => {
       handleDrawerToggle,
       isCasesLoading,
       location.pathname,
+      selected,
     ],
   );
+
+  const {
+    isAddCaseModalOpen,
+    toggleIsAddCaseModalOpen,
+    isAddFolderModalOpen,
+    toggleIsAddFolderModalOpen,
+    isAddDocumentModalOpen,
+    toggleIsAddDocumentModalOpen,
+  } = useAppStore();
 
   return (
     <Box id="page-wrapper" sx={boxStyles}>
@@ -391,6 +493,19 @@ export const Page: FC<IPageProps> = () => {
           <Outlet />
         </Container>
       </Box>
+      <AddCaseModal
+        toggleModalOpen={toggleIsAddCaseModalOpen}
+        open={isAddCaseModalOpen}
+      />
+      <AddFolderModal
+        toggleModalOpen={toggleIsAddFolderModalOpen}
+        open={isAddFolderModalOpen}
+        type="document"
+      />
+      <AddDocumentModal
+        toggleModalOpen={toggleIsAddDocumentModalOpen}
+        open={isAddDocumentModalOpen}
+      />
     </Box>
   );
 };

@@ -19,6 +19,7 @@ import { useGetCases } from '../../../../../queries/useGetCases';
 import { useUploadDocument } from '../../../../../mutations/useUploadDocument';
 import { TakeoverModal } from '../../../../shared/TakeoverModal';
 import { useParams } from 'react-router-dom';
+import { useAppStore } from '../../../../../zustand/app';
 
 function renderFolderMenuItems(folders: any[], paddingLeft = 0) {
   return folders.flatMap((folder: any) => {
@@ -51,18 +52,9 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
   open,
   toggleModalOpen,
 }) => {
-  const { caseId: caseIdParam, folderId: folderIdParam } = useParams<{
-    caseId: string;
-    folderId: string;
-  }>();
+  const { relevantCaseId, relevantFolderId } = useAppStore();
 
   const [inputFile, setInputFile] = useState<File | null>(null);
-  const [documentCaseId, setDocumentCaseId] = useState<string>(
-    caseIdParam || '',
-  );
-  const [documentFolderId, setDocumentFolderId] = useState<string>(
-    folderIdParam || '',
-  );
 
   const {
     isLoading: isCasesLoading,
@@ -73,35 +65,21 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
   });
 
   const { uploadDocument, isLoading: isDocumentUploading } = useUploadDocument({
-    caseId: caseIdParam || documentCaseId,
-    folderId: documentFolderId,
+    caseId: relevantCaseId as string,
+    folderId: relevantFolderId || '',
     userId: '649648ac4cea1cc6acc1e35e',
     file: inputFile,
     refetch,
   });
 
   const uploadEnabled = useMemo(
-    () => (caseIdParam || documentCaseId) && inputFile,
-    [caseIdParam, documentCaseId, inputFile],
+    () => relevantCaseId && inputFile,
+    [inputFile, relevantCaseId],
   );
 
   const handleInputFileChange = (file: File | null) => {
     setInputFile(file);
   };
-
-  const handleDocumentCaseIdChange = (e: SelectChangeEvent) => {
-    console.log({ e });
-    setDocumentCaseId(e.target.value);
-  };
-
-  const handleDocumentFolderIdChange = (e: SelectChangeEvent) => {
-    console.log({ e });
-    setDocumentFolderId(e.target.value);
-  };
-
-  const relevantCase = useMemo(() => {
-    return casesData?.cases.find((c: any) => c._id === documentCaseId);
-  }, [casesData?.cases, documentCaseId]);
 
   return (
     <TakeoverModal toggleModalOpen={toggleModalOpen} open={open}>
@@ -123,72 +101,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
             />
           </div>
         </Tooltip>
-        {!caseIdParam && (
-          <Tooltip
-            enterNextDelay={500}
-            enterDelay={500}
-            title="Which case are you adding this document to?"
-          >
-            <FormControl variant="outlined" fullWidth required>
-              <InputLabel
-                sx={{ backgroundColor: '#f7f7f8' }}
-                id="document-case-id-label"
-              >
-                Which case does this document belong to?
-              </InputLabel>
-              <Select
-                labelId="document-case-id-label"
-                id="document-case-id"
-                required
-                multiline
-                placeholder="Case Name..."
-                value={documentCaseId}
-                onChange={handleDocumentCaseIdChange}
-              >
-                {!isCasesLoading &&
-                  casesData?.cases.map((caseData: any, idx: number) => (
-                    <MenuItem
-                      key={`case-option-${caseData._id}`}
-                      value={caseData._id}
-                    >
-                      {caseData.name}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-          </Tooltip>
-        )}
-        {!folderIdParam && (
-          <Tooltip
-            enterNextDelay={500}
-            enterDelay={500}
-            title="Which folder would you like to add your document to?"
-          >
-            <FormControl variant="outlined" fullWidth>
-              <InputLabel
-                sx={{ backgroundColor: '#f7f7f8' }}
-                id="document-folder-id-label"
-              >
-                Which folder?
-              </InputLabel>
-              <Select
-                labelId="document-folder-id-label"
-                id="document-folder-id"
-                multiline
-                placeholder="Folder Name..."
-                value={documentFolderId}
-                onChange={handleDocumentFolderIdChange}
-              >
-                <MenuItem sx={{ paddingLeft: '24px' }} value={''}>
-                  None
-                </MenuItem>
-                {!isCasesLoading &&
-                  relevantCase &&
-                  renderFolderMenuItems(relevantCase.folders, 24)}
-              </Select>
-            </FormControl>
-          </Tooltip>
-        )}
         <Button
           sx={{ pt: '12px', pb: '12px' }}
           variant="contained"
@@ -196,8 +108,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
           disabled={!uploadEnabled}
           onClick={async () => {
             await uploadDocument();
-            setDocumentCaseId('');
-            setDocumentFolderId('');
             setInputFile(null);
             toggleModalOpen(false);
           }}

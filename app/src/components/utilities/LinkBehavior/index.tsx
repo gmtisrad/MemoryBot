@@ -1,19 +1,28 @@
 import { SxProps } from '@mui/material';
-import { forwardRef } from 'react';
-import { Link, LinkProps } from 'react-router-dom';
+import { MouseEventHandler, ReactNode, forwardRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export const LinkBehavior = forwardRef<
-  HTMLAnchorElement,
-  Omit<LinkProps, 'to'> & { href: LinkProps['to']; sx?: SxProps }
+  HTMLDivElement,
+  { href: string; sx?: SxProps; children: ReactNode }
 >((props, ref) => {
   const { href, ...other } = props;
-  // Map href (MUI) -> to (react-router)
+
+  const navigate = useNavigate();
+
+  const handleNavigate: MouseEventHandler<HTMLDivElement> = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    navigate(href);
+  };
+
   return (
-    <Link
-      style={props.sx}
+    <div
+      role="button"
       data-testid="custom-link"
       ref={ref}
-      to={href}
+      onClick={handleNavigate}
       {...other}
     />
   );

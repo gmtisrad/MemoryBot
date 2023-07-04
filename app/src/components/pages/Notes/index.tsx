@@ -10,7 +10,7 @@ import { CircularProgress } from '@mui/material';
 export const Notes = () => {
   const [editorObject, setEditorObject] = useState<RawEditor>();
   const { noteId } = useParams();
-  const { isLoading, data } = useGetNote({ noteId });
+  const { isLoading, data: note } = useGetNote({ noteId });
   const { mutateAsync: updateNote } = useUpdateNote();
 
   const autosaveNote = async (content: string, editor: RawEditor) => {
@@ -39,7 +39,7 @@ export const Notes = () => {
         <Editor
           tinymceScriptSrc={'/public/tinymce/tinymce.min.js'}
           onInit={(evt, editor) => setEditorObject(editor)}
-          initialValue={data?.note.content}
+          initialValue={note?.content}
           onEditorChange={handleEditorChange}
           init={{
             height: '100%',

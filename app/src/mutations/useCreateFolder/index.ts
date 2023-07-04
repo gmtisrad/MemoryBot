@@ -6,6 +6,7 @@ interface IUseCreateFolderArgs {
   parentId?: string;
   name: string;
   userId: string;
+  type: string;
   refetch?: () => void;
 }
 
@@ -18,7 +19,7 @@ interface IUseCreateFolderRes {
 
 export const useCreateFolder: (
   args: IUseCreateFolderArgs,
-) => IUseCreateFolderRes = ({ caseId, name, parentId, refetch }) => {
+) => IUseCreateFolderRes = ({ caseId, name, parentId, type, refetch }) => {
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);

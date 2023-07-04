@@ -7,6 +7,7 @@ export interface ICreateCaseFolderArgs {
   caseId: string;
   folderName: string;
   parent: string | null;
+  type: string;
 }
 
 export interface IGetUserCasesArgs {

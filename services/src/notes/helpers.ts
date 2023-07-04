@@ -54,8 +54,6 @@ export const updateNote = async ({
 }: any): Promise<UpdateNoteRes> => {
   const mongoDB = await getDb();
 
-  console.log({ noteId });
-
   const { acknowledged } = await mongoDB.collection('notes').updateOne(
     { _id: new ObjectId(noteId) },
     {

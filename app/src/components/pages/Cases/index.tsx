@@ -49,18 +49,6 @@ export const Cases: FC = () => {
           Add Document
         </Button>
       </Stack>
-      <AddCaseModal
-        toggleModalOpen={toggleAddCaseModalOpen}
-        open={isAddCaseModalOpen}
-      />
-      <AddFolderModal
-        toggleModalOpen={toggleFolderModalOpen}
-        open={isAddFolderModalOpen}
-      />
-      <AddDocumentModal
-        toggleModalOpen={toggleModalOpen}
-        open={isAddModalOpen}
-      />
     </Container>
   );
 };
