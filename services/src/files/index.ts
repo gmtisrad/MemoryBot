@@ -30,14 +30,6 @@ filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
       return;
     }
 
-    console.log({
-      userId,
-      caseId,
-      folderId,
-      fileName: originalFile.originalname,
-      originalFile,
-    });
-
     const Key = `users/${userId}/case/${caseId}/folder/${folderId}/${originalFile.originalname}`;
 
     const params = {

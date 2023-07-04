@@ -1,8 +1,9 @@
-import { Container } from '@mui/material';
-import { FC } from 'react';
+import { Box } from '@mui/material';
+import { FC, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { PDFRenderer } from '../../shared/PDFRenderer';
 import { useGetBase64PDF } from '../../../queries/useGetBase64PDF';
+import { DocumentViewer } from '../../shared/DocumentViewer';
+import { useGetDocument } from '../../../queries/useGetDocument';
 
 // caseDetails,
 // numResults,
@@ -17,15 +18,27 @@ import { useGetBase64PDF } from '../../../queries/useGetBase64PDF';
 export const Documents: FC = () => {
   const { documentId } = useParams<{ documentId: string }>();
 
+  const { data: documentEntry } = useGetDocument({ documentId });
+
   const { data } = useGetBase64PDF({ documentId });
 
-  console.log({ data });
+  const docs = useMemo(
+    () => [{ uri: data?.url || '', fileName: documentEntry?.document?.name }],
+    [data?.url, documentEntry?.document?.name],
+  );
 
   return (
-    <Container
-      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    <Box
+      sx={{
+        paddingLeft: 0,
+        paddingRight: 0,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
     >
-      <PDFRenderer pdfUrl={data?.url} />
-    </Container>
+      {/* <PDFRenderer pdfUrl={data?.url} /> */}
+      <DocumentViewer docs={docs} />
+    </Box>
   );
 };

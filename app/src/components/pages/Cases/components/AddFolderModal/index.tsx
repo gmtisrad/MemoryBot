@@ -114,7 +114,10 @@ export const AddFolderModal: FC<IAddFolderModalProps> = ({
               >
                 {!isCasesLoading &&
                   casesData?.cases.flatMap((caseData: any) => (
-                    <MenuItem key={caseData._id} value={caseData._id}>
+                    <MenuItem
+                      key={`case-item-${caseData._id}`}
+                      value={caseData._id}
+                    >
                       {caseData.name}
                     </MenuItem>
                   ))}
@@ -147,7 +150,10 @@ export const AddFolderModal: FC<IAddFolderModalProps> = ({
                 {!isCasesLoading &&
                   relevantCase?.folders &&
                   flattenFolders(relevantCase?.folders).map((folder: any) => (
-                    <MenuItem key={folder._id} value={folder._id}>
+                    <MenuItem
+                      key={`folder-item-${folder._id}`}
+                      value={folder._id}
+                    >
                       {folder.name}
                     </MenuItem>
                   ))}

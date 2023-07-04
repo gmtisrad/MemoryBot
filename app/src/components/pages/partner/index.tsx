@@ -134,7 +134,7 @@ export const Partner: FC = () => {
           {previousMessages.map((message, index) => {
             return (
               <UserMessage
-                key={index}
+                key={`user-message-${index}`}
                 message={message.content}
                 isUser={message.isUser}
               />

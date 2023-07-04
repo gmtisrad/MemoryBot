@@ -1,10 +1,11 @@
-import { Cases } from './components/pages/Cases';
-import { Page } from './components/layout/Page';
-import { Generate } from './components/pages/Generate';
-import { Generated } from './components/pages/Generated';
-import { Home } from './components/pages/home';
-import { Partner } from './components/pages/partner';
-import { Documents } from './components/pages/Documents';
+import { Cases } from '../components/pages/Cases';
+import { Page } from '../components/layout/Page';
+import { Generate } from '../components/pages/Generate';
+import { Generated } from '../components/pages/Generated';
+import { Documents } from '../components/pages/Documents';
+import { Partner } from '../components/pages/Partner';
+import { Home } from '../components/pages/Home';
+import { Notes } from '../components/pages/Notes';
 
 const home = <Home />;
 
@@ -17,6 +18,8 @@ const generate = <Generate />;
 const generated = <Generated />;
 
 const documents = <Documents />;
+
+const notes = <Notes />;
 
 const partnerRoutes = [
   {
@@ -69,6 +72,14 @@ const caseRoutes = [
   {
     path: '/cases/:caseId/documents/:documentId',
     element: documents,
+  },
+  {
+    path: '/cases/:caseId/notes',
+    element: notes,
+  },
+  {
+    path: '/cases/:caseId/notes/:noteId',
+    element: notes,
   },
 ];
 

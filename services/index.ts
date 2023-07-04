@@ -13,6 +13,7 @@ import { partnerRouter } from './src/partner';
 import { casesRouter } from './src/cases';
 import { llmRouter } from './src/llm';
 import { chatsRouter } from './src/chats';
+import { notesRouter } from './src/notes';
 
 const PORT = 3001;
 
@@ -62,6 +63,8 @@ const PORT = 3001;
   app.use('/api/vector', vectorDBRouter);
 
   app.use('/api/users', usersRouter);
+
+  app.use('/api/notes', notesRouter);
 
   app.use((req, res) => {
     res.send('Hello World!');

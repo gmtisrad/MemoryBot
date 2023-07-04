@@ -23,6 +23,7 @@ export const createCase: (args: ICreateCaseArgs) => any = async ({
       documents: [],
       chats: [],
       generatedDocuments: [],
+      notes: [],
     });
 
   return { acknowledged, insertedId };

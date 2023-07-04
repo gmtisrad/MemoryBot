@@ -13,10 +13,10 @@ export const RecursiveFolderTree = ({
 }: RecursiveFolderTreeProps) => {
   return (
     <AppLink
-      key={`${folder._id}`}
+      key={`folder-${folder._id}`}
       href={`/cases/${caseId}/folders/${folder._id}`}
     >
-      <StyledTreeItem key={folder._id} nodeId={folder._id} label={folder.name}>
+      <StyledTreeItem nodeId={folder._id} label={folder.name}>
         {folder.folders.map((subFolder: any) => (
           <RecursiveFolderTree
             key={subFolder._id}
@@ -26,7 +26,7 @@ export const RecursiveFolderTree = ({
         ))}
         {folder.documents.map((document: any) => (
           <AppLink
-            key={`${document._id}`}
+            key={document._id}
             href={`/cases/${caseId}/folders/${folder._id}/documents/${document._id}`}
           >
             <StyledTreeItem

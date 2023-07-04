@@ -7,6 +7,7 @@ import {
   getUserCases,
   structureFolders,
 } from './helpers';
+import { getUserNotes } from '../notes/helpers';
 
 export const casesRouter = express.Router();
 
@@ -80,12 +81,15 @@ casesRouter.get('/user/:userId', async (req, res) => {
           documents: documentsRes,
         });
 
+        const notes = await getUserNotes({ userId });
+
         return {
           ...caseItem,
           folders: structuredFolders,
           documents: documentsRes.filter((doc: any) => !doc.folderId) || [],
           chats: chatsRes || [],
-          generatedDocuments,
+          notes: notes || [],
+          generatedDocuments: generatedDocuments || [],
         };
       }),
     );

@@ -33,7 +33,6 @@ import { StyledTreeItem } from './styled';
 import { RecursiveFolderTree } from './components/recursiveFolderTree/recursiveFolderTree';
 
 const containerStyles = {
-  padding: { xs: '12px 6px', md: '0' },
   flex: 1,
   overflow: 'auto',
 };
@@ -66,7 +65,20 @@ const pages = [
 
 export const Page: FC<IPageProps> = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { chatId, caseId } = useParams();
+  const { chatId, caseId, folderId, documentId } = useParams();
+
+  const selected = useMemo(() => [documentId, chatId], [chatId, documentId]);
+
+  const expanded = useMemo(
+    () =>
+      [caseId, folderId, ...(caseId ? [`files-${caseId}-all`] : [])].filter(
+        (o) => !!o,
+      ),
+    [caseId, folderId],
+  );
+
+  console.log({ expanded });
+
   const location = useLocation();
 
   const theme = useTheme();
@@ -153,6 +165,8 @@ export const Page: FC<IPageProps> = () => {
                     aria-label="documents tree"
                     defaultCollapseIcon={<ArrowDropDown />}
                     defaultExpandIcon={<ArrowRight />}
+                    expanded={expanded as string[]}
+                    selected={selected as string[]}
                     defaultEndIcon={<div style={{ width: 24 }} />}
                     sx={{ pt: 0, pb: 0 }}
                   >
@@ -171,7 +185,7 @@ export const Page: FC<IPageProps> = () => {
                               <StyledTreeItem
                                 key={`files-${caseItem._id}-all`}
                                 nodeId={`files-${caseItem._id}-all`}
-                                label="Your Files"
+                                label="Documents"
                               >
                                 {caseItem.folders.map((folder: any) => {
                                   return (
@@ -184,12 +198,37 @@ export const Page: FC<IPageProps> = () => {
                                 {caseItem.documents.map((document: any) => {
                                   return (
                                     <AppLink
-                                      key={document._id}
+                                      key={`case-documents-${document._id}`}
                                       href={`/cases/${caseItem._id}/documents/${document._id}`}
                                     >
                                       <StyledTreeItem
                                         nodeId={document._id}
                                         label={document.name}
+                                        icon={<ArticleOutlined />}
+                                      />
+                                    </AppLink>
+                                  );
+                                })}
+                              </StyledTreeItem>
+                            </AppLink>
+                            <AppLink href={`/cases/${caseItem._id}/notes`}>
+                              <StyledTreeItem
+                                key={`notes-${caseItem._id}-all`}
+                                nodeId={`notes-${caseItem._id}-all`}
+                                label="Notes"
+                              >
+                                {/* Dummy component to show notes is a sub-tree */}
+                                <div></div>
+                                {caseItem?.notes?.map((note: any) => {
+                                  console.log({ note });
+                                  return (
+                                    <AppLink
+                                      key={`case-notes-${note._id}`}
+                                      href={`/cases/${caseItem._id}/notes/${note._id}`}
+                                    >
+                                      <StyledTreeItem
+                                        nodeId={note._id}
+                                        label={note.name}
                                         icon={<ArticleOutlined />}
                                       />
                                     </AppLink>
@@ -208,11 +247,12 @@ export const Page: FC<IPageProps> = () => {
                 !!cases.length &&
                 !isCasesLoading && (
                   <TreeView
-                    aria-label="documents tree"
+                    aria-label="partner tree"
                     defaultCollapseIcon={<ArrowDropDown />}
                     defaultExpandIcon={<ArrowRight />}
                     defaultEndIcon={<div style={{ width: 24 }} />}
-                    defaultExpanded={[...(caseId ? [caseId] : [])]}
+                    expanded={expanded as string[]}
+                    selected={selected as string[]}
                     sx={{ pt: 0, pb: 0 }}
                   >
                     {cases.map((caseItem: any) => {
@@ -260,7 +300,7 @@ export const Page: FC<IPageProps> = () => {
                               href={`/partner/${caseItem._id}/generate`}
                             >
                               <StyledTreeItem
-                                nodeId={`generate-documents-${caseItem._id}`}
+                                nodeId={`generated-documents-${caseItem._id}`}
                                 label="Generate Documents"
                               >
                                 {caseItem.generatedDocuments.map(
@@ -298,10 +338,10 @@ export const Page: FC<IPageProps> = () => {
       </div>
     ),
     [
-      caseId,
       cases,
       chatId,
       currentPath,
+      expanded,
       handleDrawerToggle,
       isCasesLoading,
       location.pathname,
@@ -347,7 +387,7 @@ export const Page: FC<IPageProps> = () => {
       </Drawer>
       <Box id="content-wrapper" sx={getContentStyles(contentMarginLeft)}>
         <TopNav handleDrawerToggle={handleDrawerToggle} />
-        <Container maxWidth={false} sx={containerStyles}>
+        <Container maxWidth={false} disableGutters sx={containerStyles}>
           <Outlet />
         </Container>
       </Box>

@@ -26,7 +26,7 @@ function renderFolderMenuItems(folders: any[], paddingLeft = 0) {
     const folderItem = (
       <MenuItem
         sx={{ paddingLeft: `${paddingLeft}px` }}
-        key={folder._id}
+        key={`folder-option-${folder._id}`}
         value={folder._id}
       >
         {folder.name}
@@ -63,8 +63,6 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
   const [documentFolderId, setDocumentFolderId] = useState<string>(
     folderIdParam || '',
   );
-
-  console.log({ folderIdParam, caseIdParam });
 
   const {
     isLoading: isCasesLoading,
@@ -149,7 +147,10 @@ export const AddDocumentModal: FC<IAddDocumentModalProps> = ({
               >
                 {!isCasesLoading &&
                   casesData?.cases.map((caseData: any, idx: number) => (
-                    <MenuItem key={caseData._id} value={caseData._id}>
+                    <MenuItem
+                      key={`case-option-${caseData._id}`}
+                      value={caseData._id}
+                    >
                       {caseData.name}
                     </MenuItem>
                   ))}
