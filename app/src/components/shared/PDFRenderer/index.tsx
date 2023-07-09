@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page } from 'react-pdf';
 import styled from 'styled-components';
 import { Pagination } from '@mui/material';
 import { Box } from '@mui/material';
@@ -8,11 +8,6 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import { useWindowSize } from 'react-use';
-
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url,
-).toString();
 
 interface PDFRendererProps {
   pdfUrl: string;

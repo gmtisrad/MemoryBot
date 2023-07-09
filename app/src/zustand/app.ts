@@ -8,6 +8,7 @@ interface IAppStore {
   toggleIsAddFolderModalOpen: (args: {
     folderId?: string;
     caseId?: string;
+    type?: string;
   }) => void;
 
   isAddDocumentModalOpen: boolean;
@@ -18,6 +19,8 @@ interface IAppStore {
 
   relevantFolderId?: string;
   relevantCaseId?: string;
+
+  folderType?: string;
 }
 
 export const useAppStore = create<IAppStore>((set) => ({
@@ -26,12 +29,13 @@ export const useAppStore = create<IAppStore>((set) => ({
     set((state) => ({ isAddCaseModalOpen: !state.isAddCaseModalOpen })),
 
   isAddFolderModalOpen: false,
-  toggleIsAddFolderModalOpen: ({ folderId, caseId }) =>
+  toggleIsAddFolderModalOpen: ({ folderId, caseId, type }) =>
     set((state) => ({
       ...state,
       isAddFolderModalOpen: !state.isAddFolderModalOpen,
       relevantFolderId: state.isAddFolderModalOpen ? undefined : folderId,
       relevantCaseId: state.isAddFolderModalOpen ? undefined : caseId,
+      folderType: type,
     })),
 
   isAddDocumentModalOpen: false,

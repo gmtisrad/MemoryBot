@@ -52,7 +52,7 @@ export const TopNav: FC<ITopNavProps> = ({ sx, handleDrawerToggle }) => {
               textDecoration: 'none',
             }}
           >
-            Advocatus
+            LexAI
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', sm: 'none' } }}>

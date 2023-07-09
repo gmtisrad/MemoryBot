@@ -31,6 +31,7 @@ export const useCreateFolder: (
         caseId,
         folderName: name,
         parent: parentId,
+        type,
       });
 
       setData(res.data);

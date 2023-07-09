@@ -14,6 +14,10 @@ const StyledDocViewer = styled(DocViewer)`
 
 export const DocumentViewer = ({ docs }: DocumentViewerProps) => {
   return (
-    <StyledDocViewer documents={docs} pluginRenderers={DocViewerRenderers} />
+    <StyledDocViewer
+      key={docs[0]?.uri}
+      documents={docs}
+      pluginRenderers={DocViewerRenderers}
+    />
   );
 };

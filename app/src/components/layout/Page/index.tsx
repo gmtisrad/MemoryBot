@@ -46,8 +46,6 @@ function getAllParents({
 }) {
   const parents: any[] = [];
 
-  console.log({ folders, folderId });
-
   if (!folderId) {
     return parents;
   }
@@ -119,6 +117,8 @@ const flattenFolders = ({ folders }: { folders?: any[] }) => {
 export const Page: FC<IPageProps> = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { chatId, caseId, folderId, documentId, noteId } = useParams();
+  const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false);
+  const [isNotesExpanded, setIsNotesExpanded] = useState(false);
   const { pathname } = useLocation();
 
   const isNotesPath = pathname.includes('/notes');
@@ -133,7 +133,10 @@ export const Page: FC<IPageProps> = () => {
     data: { cases },
   } = useGetCases({ userId: '649648ac4cea1cc6acc1e35e' });
 
-  const selected = useMemo(() => [documentId, chatId], [chatId, documentId]);
+  const selected = useMemo(
+    () => [documentId, chatId, noteId],
+    [chatId, documentId, noteId],
+  );
 
   const caseFolders = useMemo(() => {
     return cases.find((c: any) => c._id === caseId)?.folders;
@@ -148,7 +151,6 @@ export const Page: FC<IPageProps> = () => {
       folders: flattenedCaseFolders,
       folderId,
     });
-    console.log({ allParentFolders });
     return allParentFolders.map((folder) => folder?._id);
   }, [flattenedCaseFolders, folderId]);
 
@@ -158,13 +160,22 @@ export const Page: FC<IPageProps> = () => {
         caseId,
         folderId,
         ...(folderId && cases.length ? allParentIds : []),
-        ...(caseId ? [`files-${caseId}-all`] : []),
+        ...(documentId || isDocumentsExpanded ? [`files-${caseId}-all`] : []),
+        ...(noteId || isNotesExpanded ? [`files-${caseId}-all`] : []),
         ...(isNotesPath || noteId ? [`notes-${caseId}-all`] : []),
       ].filter((o) => !!o),
-    [allParentIds, caseId, cases.length, folderId, isNotesPath, noteId],
+    [
+      allParentIds,
+      caseId,
+      cases.length,
+      documentId,
+      folderId,
+      isDocumentsExpanded,
+      isNotesExpanded,
+      isNotesPath,
+      noteId,
+    ],
   );
-
-  console.log({ expanded });
 
   const paths = useCurrentPath();
 
@@ -262,10 +273,15 @@ export const Page: FC<IPageProps> = () => {
                               <StyledTreeItem
                                 key={`files-${caseItem._id}-all`}
                                 nodeId={`files-${caseItem._id}-all`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setIsDocumentsExpanded(!isDocumentsExpanded);
+                                }}
                                 label={
                                   <NestableSubTreeItemLabel
                                     caseId={caseItem._id}
                                     label="Documents"
+                                    type="documents"
                                   />
                                 }
                               >
@@ -273,7 +289,10 @@ export const Page: FC<IPageProps> = () => {
                                   .filter((f: any) => f.type === 'documents')
                                   .map((folder: any) => {
                                     return (
-                                      <RecursiveFolderTree folder={folder} />
+                                      <RecursiveFolderTree
+                                        key={folder._id}
+                                        folder={folder}
+                                      />
                                     );
                                   })}
                                 {caseItem.documents.map((document: any) => {
@@ -296,10 +315,15 @@ export const Page: FC<IPageProps> = () => {
                               <StyledTreeItem
                                 key={`notes-${caseItem._id}-all`}
                                 nodeId={`notes-${caseItem._id}-all`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setIsNotesExpanded(!isNotesExpanded);
+                                }}
                                 label={
                                   <NestableSubTreeItemLabel
                                     caseId={caseItem._id}
                                     label="Notes"
+                                    type="notes"
                                   />
                                 }
                               >
@@ -309,7 +333,10 @@ export const Page: FC<IPageProps> = () => {
                                   .filter((f: any) => f.type === 'notes')
                                   .map((folder: any) => {
                                     return (
-                                      <RecursiveFolderTree folder={folder} />
+                                      <RecursiveFolderTree
+                                        key={folder._id}
+                                        folder={folder}
+                                      />
                                     );
                                   })}
                                 {caseItem?.notes?.map((note: any) => {

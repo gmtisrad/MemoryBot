@@ -15,7 +15,6 @@ export const Notes = () => {
 
   const autosaveNote = async (content: string, editor: RawEditor) => {
     // Here you will later implement the saving of the note
-    console.log('Saving note:', content);
 
     await updateNote({
       _id: noteId as string,

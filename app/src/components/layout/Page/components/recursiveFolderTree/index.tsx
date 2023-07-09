@@ -10,7 +10,7 @@ interface RecursiveFolderTreeProps {
 export const RecursiveFolderTree = ({ folder }: RecursiveFolderTreeProps) => {
   return (
     <AppLink
-      key={`folder-${folder._id}`}
+      key={`recursive-folder-tree-link-${folder._id}`}
       href={`/cases/${folder.caseId}/folders/${folder._id}`}
     >
       <StyledTreeItem

@@ -43,12 +43,14 @@ interface NestableSubTreeItemLabelProps {
   label: string;
   caseId?: string;
   folderId?: string;
+  type?: string;
 }
 
 export const NestableSubTreeItemLabel = ({
   label,
   caseId,
   folderId,
+  type,
 }: NestableSubTreeItemLabelProps) => {
   const appStore = useAppStore();
   const { toggleIsAddFolderModalOpen, toggleIsAddDocumentModalOpen } = appStore;

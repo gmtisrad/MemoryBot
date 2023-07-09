@@ -15,7 +15,7 @@ const getCurrentDate = () => {
 };
 
 notesRouter.post('/create', async (req, res) => {
-  const { caseId, folderId, userId, content } = req.body;
+  const { caseId, folderId, userId, content, type } = req.body;
 
   let createNoteRes;
 
@@ -26,6 +26,7 @@ notesRouter.post('/create', async (req, res) => {
       userId,
       content,
       name: `Note - ${getCurrentDate()}`,
+      type,
     });
   } catch (e) {
     res.status(500).send('Failed to create new note.');

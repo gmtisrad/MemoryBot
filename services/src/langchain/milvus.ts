@@ -49,29 +49,6 @@ export const embedAndStore = async ({
   await Milvus.fromDocuments(documents, embeddings, dbConfig);
 };
 
-// export const textSimilaritySearch = async ({
-//   collection,
-//   query,
-// }: similaritySearch) => {
-//   const dbConfig: MilvusLibArgs = {
-//     url: `${process.env.MILVUS_URL}:${process.env.MILVUS_PORT}`,
-//     collectionName: collection,
-//   };
-
-//   const embeddings = new OpenAIEmbeddings({
-//     modelName: process.env.OPENAI_EMBEDDING_MODEL,
-//   });
-
-//   const vectorStore = await Milvus.fromExistingCollection(embeddings, dbConfig);
-
-//   const retriever = new ContextualCompressionRetriever({
-//     baseCompressor,
-//     baseRetriever: vectorStore.asRetriever(),
-//   });
-
-//   const similarityResults = vectorStore.similaritySearch(query);
-// };
-
 export const textSimilaritySearch = async ({
   collection,
   temperature,

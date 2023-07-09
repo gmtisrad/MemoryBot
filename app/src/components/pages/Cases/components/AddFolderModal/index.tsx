@@ -21,9 +21,8 @@ interface IAddFolderModalProps {
 export const AddFolderModal: FC<IAddFolderModalProps> = ({
   toggleModalOpen,
   open,
-  type,
 }) => {
-  const { relevantFolderId, relevantCaseId } = useAppStore();
+  const { relevantFolderId, relevantCaseId, folderType } = useAppStore();
 
   const [folderName, setFolderName] = useState<string>('');
 
@@ -40,7 +39,7 @@ export const AddFolderModal: FC<IAddFolderModalProps> = ({
     name: folderName,
     userId: '649648ac4cea1cc6acc1e35e',
     refetch,
-    type,
+    type: folderType as string,
   });
 
   const handleFolderNameChange = (

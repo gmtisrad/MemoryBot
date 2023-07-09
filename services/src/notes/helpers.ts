@@ -7,6 +7,7 @@ interface CreateNewArgs {
   userId: string;
   content: string;
   name: string;
+  type: string;
 }
 
 export const createNote = async ({
@@ -15,6 +16,7 @@ export const createNote = async ({
   userId,
   content,
   name,
+  type,
 }: CreateNewArgs) => {
   const mongoDB = await getDb();
 
@@ -26,6 +28,7 @@ export const createNote = async ({
       folderId: new ObjectId(folderId),
       content: content || '',
       name,
+      type,
     });
 
   await mongoDB.collection('cases').updateOne(
