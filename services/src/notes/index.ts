@@ -6,7 +6,6 @@ export const notesRouter = express.Router();
 const getCurrentDate = () => {
   const date = new Date();
 
-  // getMonth() returns a 0-indexed month, so we add 1
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const year = date.getFullYear();
@@ -15,7 +14,7 @@ const getCurrentDate = () => {
 };
 
 notesRouter.post('/create', async (req, res) => {
-  const { caseId, folderId, userId, content, type } = req.body;
+  const { caseId, folderId, userId, type } = req.body;
 
   let createNoteRes;
 
@@ -24,7 +23,7 @@ notesRouter.post('/create', async (req, res) => {
       caseId,
       folderId,
       userId,
-      content,
+      content: '',
       name: `Note - ${getCurrentDate()}`,
       type,
     });

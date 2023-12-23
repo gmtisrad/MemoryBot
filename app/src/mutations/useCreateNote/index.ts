@@ -5,7 +5,6 @@ interface CreateNoteMutationArgs {
   caseId: string;
   folderId: string;
   userId: string;
-  content: string;
 }
 
 export const useCreateNote = (): UseMutationResult<
@@ -15,17 +14,11 @@ export const useCreateNote = (): UseMutationResult<
   unknown
 > => {
   const mutation = useMutation({
-    mutationFn: ({
-      caseId,
-      folderId,
-      userId,
-      content,
-    }: CreateNoteMutationArgs) => {
+    mutationFn: ({ caseId, folderId, userId }: CreateNoteMutationArgs) => {
       return axios.post('/api/notes/create', {
         caseId,
         folderId,
         userId,
-        content,
       });
     },
   });

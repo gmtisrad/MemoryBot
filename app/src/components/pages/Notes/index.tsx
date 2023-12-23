@@ -18,7 +18,7 @@ export const Notes = () => {
 
     await updateNote({
       _id: noteId as string,
-      content: editor.getContent(),
+      content,
     });
 
     editor.setDirty(false);

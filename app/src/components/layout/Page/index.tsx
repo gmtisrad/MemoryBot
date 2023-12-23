@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { TopNav } from '../TopNav';
 import {
   Box,
@@ -37,34 +37,36 @@ import { AddDocumentModal } from '../../pages/Cases/components/AddDocumentModal'
 import { useAppStore } from '../../../zustand/app';
 import { NestableSubTreeItemLabel } from './components/nestableSubTreeItemLabel';
 
-function getAllParents({
+function getAllFolders({
   folders,
   folderId,
 }: {
   folders: any[];
   folderId?: string;
 }) {
-  const parents: any[] = [];
+  const allFolders: any[] = [];
 
   if (!folderId) {
-    return parents;
+    return allFolders;
   }
 
   let currentFolder = folders?.find((folder) => folder._id === folderId);
+
+  allFolders.push(currentFolder);
 
   while (currentFolder && currentFolder.parent !== null) {
     const parentFolder = folders.find(
       (folder) => folder._id === currentFolder.parent,
     );
     if (parentFolder) {
-      parents.push(parentFolder);
+      allFolders.push(parentFolder);
       currentFolder = parentFolder;
     } else {
       break;
     }
   }
 
-  return parents;
+  return allFolders.filter((f) => !!f);
 }
 
 const containerStyles = {
@@ -117,8 +119,16 @@ const flattenFolders = ({ folders }: { folders?: any[] }) => {
 export const Page: FC<IPageProps> = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { chatId, caseId, folderId, documentId, noteId } = useParams();
-  const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false);
-  const [isNotesExpanded, setIsNotesExpanded] = useState(false);
+  const [expandedInitialized, setExpandedInitialized] =
+    useState<boolean>(false);
+
+  const [partnerExpandedNodeIds, setPartnerExpandedNodeIds] = useState<
+    string[]
+  >([]);
+  const [partnerSelectedNodeIds, setPartnersSelectedNodeIds] = useState<
+    string[]
+  >([]);
+
   const { pathname } = useLocation();
 
   const isNotesPath = pathname.includes('/notes');
@@ -133,11 +143,6 @@ export const Page: FC<IPageProps> = () => {
     data: { cases },
   } = useGetCases({ userId: '649648ac4cea1cc6acc1e35e' });
 
-  const selected = useMemo(
-    () => [documentId, chatId, noteId],
-    [chatId, documentId, noteId],
-  );
-
   const caseFolders = useMemo(() => {
     return cases.find((c: any) => c._id === caseId)?.folders;
   }, [caseId, cases]);
@@ -146,36 +151,65 @@ export const Page: FC<IPageProps> = () => {
     return flattenFolders({ folders: caseFolders });
   }, [caseFolders]);
 
-  const allParentIds = useMemo(() => {
-    const allParentFolders = getAllParents({
+  const allFolders = useMemo(() => {
+    return getAllFolders({
       folders: flattenedCaseFolders,
       folderId,
     });
-    return allParentFolders.map((folder) => folder?._id);
   }, [flattenedCaseFolders, folderId]);
 
-  const expanded = useMemo(
-    () =>
-      [
-        caseId,
-        folderId,
-        ...(folderId && cases.length ? allParentIds : []),
-        ...(documentId || isDocumentsExpanded ? [`files-${caseId}-all`] : []),
-        ...(noteId || isNotesExpanded ? [`files-${caseId}-all`] : []),
-        ...(isNotesPath || noteId ? [`notes-${caseId}-all`] : []),
-      ].filter((o) => !!o),
+  // All the parent folders of the current selected and the current selected ID
+  const allFolderIds = useMemo(() => {
+    return allFolders.map((folder) => folder?._id);
+  }, [allFolders]);
+
+  const relevantFolder = allFolders?.find((f: any) => f._id === folderId);
+
+  const [caseExpandedNodeIds, setCaseExpandedNodeIds] = useState<string[]>(
     [
-      allParentIds,
       caseId,
-      cases.length,
-      documentId,
-      folderId,
-      isDocumentsExpanded,
-      isNotesExpanded,
-      isNotesPath,
-      noteId,
-    ],
+      ...(folderId && cases.length ? allFolderIds : []),
+      ...(documentId || relevantFolder?.type === 'documents'
+        ? [`files-${caseId}-all`]
+        : []),
+      ...(noteId || relevantFolder?.type === 'notes'
+        ? [`notes-${caseId}-all`]
+        : []),
+      ...(isNotesPath || noteId ? [`notes-${caseId}-all`] : []),
+    ].filter((o) => !!o),
   );
+  const [caseSelectedNodeIds, setCaseSelectedNodeIds] = useState<string[]>(
+    [documentId!, chatId!, noteId!].filter((o) => !!o),
+  );
+
+  useEffect(() => {
+    if (!expandedInitialized && relevantFolder) {
+      setCaseExpandedNodeIds([
+        caseId,
+        ...(folderId && cases.length ? allFolderIds : []),
+        ...(documentId || relevantFolder?.type === 'documents'
+          ? [`files-${caseId}-all`]
+          : []),
+        ...(noteId || relevantFolder?.type === 'notes'
+          ? [`notes-${caseId}-all`]
+          : []),
+        ...(isNotesPath || noteId ? [`notes-${caseId}-all`] : []),
+        ...allFolderIds,
+      ]);
+      setExpandedInitialized(true);
+    }
+  }, [
+    allFolderIds,
+    caseId,
+    cases.length,
+    documentId,
+    expandedInitialized,
+    folderId,
+    isNotesPath,
+    noteId,
+    relevantFolder,
+    relevantFolder?.type,
+  ]);
 
   const paths = useCurrentPath();
 
@@ -206,6 +240,26 @@ export const Page: FC<IPageProps> = () => {
     }
     return '0';
   }, [drawerWidth, isSmallScreen, mobileOpen]);
+
+  const handleCaseNodesSelected = (event: any, nodeIds: string[]) => {
+    event.preventDefault();
+    setCaseSelectedNodeIds(nodeIds);
+  };
+
+  const handleCaseNodesExpanded = (event: any, nodeIds: string[]) => {
+    event.preventDefault();
+    setCaseExpandedNodeIds(nodeIds);
+  };
+
+  const handlePartnerNodesSelected = (event: any, nodeIds: string[]) => {
+    event.preventDefault();
+    setPartnersSelectedNodeIds(nodeIds);
+  };
+
+  const handlePartnerNodesExpanded = (event: any, nodeIds: string[]) => {
+    event.preventDefault();
+    setPartnerExpandedNodeIds(nodeIds);
+  };
 
   const drawer = useMemo(
     () => (
@@ -253,9 +307,19 @@ export const Page: FC<IPageProps> = () => {
                     aria-label="documents tree"
                     defaultCollapseIcon={<ArrowDropDown />}
                     defaultExpandIcon={<ArrowRight />}
-                    expanded={expanded as string[]}
-                    selected={selected as string[]}
+                    expanded={[
+                      ...(caseExpandedNodeIds as string[]),
+                      ...(documentId || relevantFolder?.type === 'documents'
+                        ? [`files-${caseId}-all`]
+                        : []),
+                      ...(noteId || relevantFolder?.type === 'notes'
+                        ? [`notes-${caseId}-all`]
+                        : []),
+                    ]}
+                    selected={caseSelectedNodeIds as string[]}
                     defaultEndIcon={<div style={{ width: 24 }} />}
+                    onNodeToggle={handleCaseNodesExpanded}
+                    onNodeSelect={handleCaseNodesSelected}
                     sx={{ pt: 0, pb: 0 }}
                   >
                     {cases.map((caseItem: any) => {
@@ -273,10 +337,6 @@ export const Page: FC<IPageProps> = () => {
                               <StyledTreeItem
                                 key={`files-${caseItem._id}-all`}
                                 nodeId={`files-${caseItem._id}-all`}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  setIsDocumentsExpanded(!isDocumentsExpanded);
-                                }}
                                 label={
                                   <NestableSubTreeItemLabel
                                     caseId={caseItem._id}
@@ -315,10 +375,6 @@ export const Page: FC<IPageProps> = () => {
                               <StyledTreeItem
                                 key={`notes-${caseItem._id}-all`}
                                 nodeId={`notes-${caseItem._id}-all`}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  setIsNotesExpanded(!isNotesExpanded);
-                                }}
                                 label={
                                   <NestableSubTreeItemLabel
                                     caseId={caseItem._id}
@@ -370,8 +426,10 @@ export const Page: FC<IPageProps> = () => {
                     defaultCollapseIcon={<ArrowDropDown />}
                     defaultExpandIcon={<ArrowRight />}
                     defaultEndIcon={<div style={{ width: 24 }} />}
-                    expanded={expanded as string[]}
-                    selected={selected as string[]}
+                    onNodeToggle={handlePartnerNodesExpanded}
+                    onNodeSelect={handlePartnerNodesSelected}
+                    expanded={partnerExpandedNodeIds}
+                    selected={partnerSelectedNodeIds}
                     sx={{ pt: 0, pb: 0 }}
                   >
                     {cases.map((caseItem: any) => {
@@ -457,14 +515,16 @@ export const Page: FC<IPageProps> = () => {
       </div>
     ),
     [
+      caseExpandedNodeIds,
+      caseSelectedNodeIds,
       cases,
       chatId,
       currentPath,
-      expanded,
       handleDrawerToggle,
       isCasesLoading,
       location.pathname,
-      selected,
+      partnerExpandedNodeIds,
+      partnerSelectedNodeIds,
     ],
   );
 

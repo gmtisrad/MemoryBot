@@ -46,6 +46,13 @@ interface NestableSubTreeItemLabelProps {
   type?: string;
 }
 
+const handleAddItemClicked = ({ type }: { type: string }) => {
+  switch (type) {
+    case 'notes':
+    case 'documents':
+  }
+};
+
 export const NestableSubTreeItemLabel = ({
   label,
   caseId,
