@@ -35,10 +35,10 @@ export function getAllFolders({
   return [];
 }
 
-export const flattenFolders = ({ folders }: { folders?: any[] }) => {
-  const flat: any[] = [];
+export const flattenFolders = ({ folders }: { folders?: IFolder[] }) => {
+  const flat: IFolder[] = [];
 
-  const traverse = (folder: any) => {
+  const traverse = (folder: IFolder) => {
     flat.push(folder);
     if (folder.folders && folder.folders.length > 0) {
       for (const subFolder of folder.folders) {

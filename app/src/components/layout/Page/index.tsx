@@ -1,4 +1,11 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  FC,
+  SyntheticEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { TopNav } from '../TopNav';
 import { Box, Container, Drawer, useMediaQuery, useTheme } from '@mui/material';
 import { Home, SmartToy, Work } from '@mui/icons-material';
@@ -10,7 +17,7 @@ import { AddDocumentModal } from '../../pages/Cases/components/AddDocumentModal'
 import { useAppStore } from '../../../zustand/app';
 import { flattenFolders, getAllFolders } from './functions';
 import { DrawerBody } from './components/Drawer';
-import { IPage } from '../../../types/app';
+import { IFolder, IPage, IProject } from '../../../types/app';
 
 const containerStyles = {
   flex: 1,
@@ -69,7 +76,7 @@ export const Page: FC<IPageProps> = () => {
   } = useGetCases({ userId: '649648ac4cea1cc6acc1e35e' });
 
   const caseFolders = useMemo(() => {
-    return cases.find((c: any) => c._id === caseId)?.folders;
+    return cases.find((c: IProject) => c._id === caseId)?.folders;
   }, [caseId, cases]);
 
   const flattenedCaseFolders = useMemo(() => {
@@ -88,7 +95,7 @@ export const Page: FC<IPageProps> = () => {
     return allFolders.map((folder) => folder?._id);
   }, [allFolders]);
 
-  const relevantFolder = allFolders?.find((f: any) => f._id === folderId);
+  const relevantFolder = allFolders?.find((f: IFolder) => f._id === folderId);
 
   const [caseExpandedNodeIds, setCaseExpandedNodeIds] = useState<string[]>(
     [
@@ -159,22 +166,28 @@ export const Page: FC<IPageProps> = () => {
     return '0';
   }, [drawerWidth, isSmallScreen, mobileOpen]);
 
-  const handleCaseNodesSelected = (event: any, nodeIds: string[]) => {
+  const handleCaseNodesSelected = (event: Event, nodeIds: string[]) => {
     event.preventDefault();
     setCaseSelectedNodeIds(nodeIds);
   };
 
-  const handleCaseNodesExpanded = (event: any, nodeIds: string[]) => {
+  const handleCaseNodesExpanded = (event: Event, nodeIds: string[]) => {
     event.preventDefault();
     setCaseExpandedNodeIds(nodeIds);
   };
 
-  const handlePartnerNodesSelected = (event: any, nodeIds: string[]) => {
+  const handlePartnerNodesSelected = (
+    event: SyntheticEvent<Element, Event>,
+    nodeIds: string[],
+  ) => {
     event.preventDefault();
     setPartnersSelectedNodeIds(nodeIds);
   };
 
-  const handlePartnerNodesExpanded = (event: any, nodeIds: string[]) => {
+  const handlePartnerNodesExpanded = (
+    event: SyntheticEvent<Element, Event>,
+    nodeIds: string[],
+  ) => {
     event.preventDefault();
     setPartnerExpandedNodeIds(nodeIds);
   };
@@ -219,6 +232,7 @@ export const Page: FC<IPageProps> = () => {
           handlePartnerNodesSelected={handlePartnerNodesSelected}
           partnerExpandedNodeIds={partnerExpandedNodeIds}
           partnerSelectedNodeIds={partnerSelectedNodeIds}
+          chatId={chatId}
         />
       </Drawer>
       <Drawer

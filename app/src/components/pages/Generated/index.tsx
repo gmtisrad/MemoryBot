@@ -3,6 +3,7 @@ import { FC, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetGeneratedDocument } from '../../../queries/useGetGeneratedDocument';
 import { useGetCases } from '../../../queries/useGetCases';
+import { IProject } from '../../../types/app';
 
 // caseDetails,
 // numResults,
@@ -17,15 +18,15 @@ import { useGetCases } from '../../../queries/useGetCases';
 export const Generated: FC = () => {
   const { caseId, generatedDocumentId } = useParams();
 
-  const { data, isLoading, error } = useGetCases({
+  const { data, isLoading } = useGetCases({
     userId: '649648ac4cea1cc6acc1e35e',
   });
 
   const generatedDocumentContent = useMemo(() => {
     return data?.cases
-      ?.find((_case: any) => _case._id === caseId)
+      ?.find((_case: IProject) => _case._id === caseId)
       ?.generatedDocuments.find(
-        (generatedDocument: any) =>
+        (generatedDocument: IProject) =>
           generatedDocument._id === generatedDocumentId,
       )?.generatedContent;
   }, [caseId, data?.cases, generatedDocumentId]);

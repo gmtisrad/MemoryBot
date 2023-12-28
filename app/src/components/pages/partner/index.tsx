@@ -1,10 +1,18 @@
 import { Send } from '@mui/icons-material';
 import { Box, Container, Stack, TextField, Typography } from '@mui/material';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ChangeEventHandler,
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { styled } from 'styled-components';
 import { useSendPrompt } from '../../../mutations/useSendPrompt';
 import { useParams } from 'react-router-dom';
 import { useGetCases } from '../../../queries/useGetCases';
+import { IProject } from '../../../types/app';
 
 const StyledSend = styled(Send)`
   cursor: pointer;
@@ -82,7 +90,9 @@ export const Partner: FC = () => {
     caseId,
   });
 
-  const handlePartnerQuestionChange = useCallback((event: any) => {
+  const handlePartnerQuestionChange: ChangeEventHandler<
+    HTMLInputElement | HTMLTextAreaElement
+  > = useCallback((event) => {
     setPrompt(event.target.value);
   }, []);
 
@@ -105,17 +115,17 @@ export const Partner: FC = () => {
   }, [prompt, sendPrompt]);
 
   const relevantCase = useMemo(() => {
-    return casesData?.cases.find((_case: any) => _case._id === caseId);
+    return casesData?.cases.find((_case: IProject) => _case._id === caseId);
   }, [casesData, caseId]);
 
   const relevantChat = useMemo(() => {
-    return relevantCase?.chats.find((chat: any) => chat._id === chatId);
+    return relevantCase?.chats.find((chat: IProject) => chat._id === chatId);
   }, [relevantCase, chatId]);
 
   useEffect(() => {
     setPreviousMessages(
-      relevantCase?.chats.find((chat: any) => chat._id == chatId)?.messages ||
-        [],
+      relevantCase?.chats.find((chat: IProject) => chat._id == chatId)
+        ?.messages || [],
     );
   }, [chatId, relevantCase, relevantCase?.chats.messages]);
 

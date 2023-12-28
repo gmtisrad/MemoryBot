@@ -11,6 +11,7 @@ import { TakeoverModal } from '../../../../shared/TakeoverModal';
 import { useGetCases } from '../../../../../queries/useGetCases';
 import { useCreateFolder } from '../../../../../mutations/useCreateFolder';
 import { useAppStore } from '../../../../../zustand/app';
+import { IFolder } from '../../../../../types/app';
 
 interface IAddFolderModalProps {
   toggleModalOpen: (isOpen?: boolean) => void;
@@ -53,10 +54,10 @@ export const AddFolderModal: FC<IAddFolderModalProps> = ({
     [folderName, relevantCaseId],
   );
 
-  const flattenFolders = (folders: any) => {
-    let flatArray: any[] = [];
+  const flattenFolders = (folders: IFolder[]) => {
+    let flatArray: IFolder[] = [];
 
-    folders.forEach((folder: any) => {
+    folders.forEach((folder: IFolder) => {
       flatArray.push(folder);
 
       if (folder.folders) {

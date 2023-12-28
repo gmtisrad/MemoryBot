@@ -1,8 +1,9 @@
+import { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface LinkBehaviorProps {
   href: string;
-  sx?: any;
+  sx?: CSSProperties;
   children: React.ReactNode;
 }
 

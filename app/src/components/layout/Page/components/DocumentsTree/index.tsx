@@ -1,6 +1,7 @@
 import { ArrowDropDown, ArrowRight } from '@mui/icons-material';
 import { TreeView } from '@mui/lab';
 import { IFolder } from '../../../../../types/app';
+import { SyntheticEvent } from 'react';
 
 export const DocumentsTree = ({
   children,
@@ -15,8 +16,14 @@ export const DocumentsTree = ({
 }: {
   children: React.ReactNode;
   documentId?: string;
-  handleProjectNodesExpanded: (event: any, nodeIds: string[]) => void;
-  handleProjectNodesSelected: (event: any, nodeIds: string[]) => void;
+  handleProjectNodesExpanded: (
+    event: SyntheticEvent<Element, Event>,
+    nodeIds: string[],
+  ) => void;
+  handleProjectNodesSelected: (
+    event: SyntheticEvent<Element, Event>,
+    nodeIds: string[],
+  ) => void;
   noteId?: string;
   projectId?: string;
   projectExpandedNodeIds: string[];

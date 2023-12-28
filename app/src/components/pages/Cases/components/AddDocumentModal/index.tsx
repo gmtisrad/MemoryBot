@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react';
+import { FC, ReactNode, useMemo, useState } from 'react';
 import {
   Button,
   CircularProgress,
@@ -18,11 +18,11 @@ import { MuiFileInput } from 'mui-file-input';
 import { useGetCases } from '../../../../../queries/useGetCases';
 import { useUploadDocument } from '../../../../../mutations/useUploadDocument';
 import { TakeoverModal } from '../../../../shared/TakeoverModal';
-import { useParams } from 'react-router-dom';
 import { useAppStore } from '../../../../../zustand/app';
+import { IFolder } from '../../../../../types/app';
 
-function renderFolderMenuItems(folders: any[], paddingLeft = 0) {
-  return folders.flatMap((folder: any) => {
+function renderFolderMenuItems(folders: IFolder[], paddingLeft = 0) {
+  return folders.flatMap((folder: IFolder) => {
     // Generate MenuItem for the current folder
     const folderItem = (
       <MenuItem
@@ -35,7 +35,7 @@ function renderFolderMenuItems(folders: any[], paddingLeft = 0) {
     );
 
     // If there are subfolders, generate their MenuItems using recursion
-    const subfolderItems: any[] = folder.folders.length
+    const subfolderItems: ReactNode[] = folder.folders.length
       ? renderFolderMenuItems(folder.folders, paddingLeft + 24)
       : [];
 

@@ -19,7 +19,16 @@ import {
   ArticleOutlined,
 } from '@mui/icons-material';
 import { TreeView } from '@mui/lab';
-import { IFolder, IPage, IProject } from '../../../../../types/app';
+import {
+  IChat,
+  IDocument,
+  IFolder,
+  IGeneratedDocument,
+  INotes,
+  IPage,
+  IProject,
+} from '../../../../../types/app';
+import { SyntheticEvent } from 'react';
 
 export const DrawerBody = ({
   pages,
@@ -38,21 +47,34 @@ export const DrawerBody = ({
   handlePartnerNodesSelected,
   partnerExpandedNodeIds,
   partnerSelectedNodeIds,
+  chatId,
 }: {
   pages: IPage[];
   handleDrawerToggle: () => void;
   projects: IProject[];
   isCasesLoading: boolean;
   documentId?: string;
-  handleProjectNodesExpanded: (event: any, nodeIds: string[]) => void;
-  handleProjectNodesSelected: (event: any, nodeIds: string[]) => void;
+  handleProjectNodesExpanded: (
+    event: SyntheticEvent<Element, Event>,
+    nodeIds: string[],
+  ) => void;
+  handleProjectNodesSelected: (
+    event: SyntheticEvent<Element, Event>,
+    nodeIds: string[],
+  ) => void;
   noteId?: string;
   projectId?: string;
   projectExpandedNodeIds: string[];
   projectSelectedNodeIds: string[];
   relevantFolder?: IFolder;
-  handlePartnerNodesExpanded: (event: any, nodeIds: string[]) => void;
-  handlePartnerNodesSelected: (event: any, nodeIds: string[]) => void;
+  handlePartnerNodesExpanded: (
+    event: SyntheticEvent<Element, Event>,
+    nodeIds: string[],
+  ) => void;
+  handlePartnerNodesSelected: (
+    event: SyntheticEvent<Element, Event>,
+    nodeIds: string[],
+  ) => void;
   partnerExpandedNodeIds: string[];
   partnerSelectedNodeIds: string[];
   chatId?: string;
@@ -88,7 +110,7 @@ export const DrawerBody = ({
                   projectSelectedNodeIds={projectSelectedNodeIds}
                   relevantFolder={relevantFolder}
                 >
-                  {projects.map((caseItem: any) => {
+                  {projects.map((caseItem: IProject) => {
                     return (
                       <AppLink
                         key={`case-${caseItem._id}`}
@@ -112,8 +134,8 @@ export const DrawerBody = ({
                               }
                             >
                               {caseItem.folders
-                                .filter((f: any) => f.type === 'documents')
-                                .map((folder: any) => {
+                                .filter((f: IFolder) => f.type === 'documents')
+                                .map((folder: IFolder) => {
                                   return (
                                     <RecursiveFolderTree
                                       key={folder._id}
@@ -121,7 +143,7 @@ export const DrawerBody = ({
                                     />
                                   );
                                 })}
-                              {caseItem.documents.map((document: any) => {
+                              {caseItem.documents.map((document: IDocument) => {
                                 return (
                                   <AppLink
                                     key={`case-documents-${document._id}`}
@@ -152,8 +174,8 @@ export const DrawerBody = ({
                               {/* Dummy component to show notes is a sub-tree */}
                               <div></div>
                               {caseItem.folders
-                                .filter((f: any) => f.type === 'notes')
-                                .map((folder: any) => {
+                                .filter((f: IFolder) => f.type === 'notes')
+                                .map((folder: IFolder) => {
                                   return (
                                     <RecursiveFolderTree
                                       key={folder._id}
@@ -161,7 +183,7 @@ export const DrawerBody = ({
                                     />
                                   );
                                 })}
-                              {caseItem?.notes?.map((note: any) => {
+                              {caseItem?.notes?.map((note: INotes) => {
                                 return (
                                   <AppLink
                                     key={`case-notes-${note._id}`}
@@ -198,7 +220,7 @@ export const DrawerBody = ({
                   selected={partnerSelectedNodeIds}
                   sx={{ pt: 0, pb: 0 }}
                 >
-                  {projects.map((caseItem: any) => {
+                  {projects.map((caseItem: IProject) => {
                     return (
                       <AppLink
                         key={`partner-${caseItem._id}`}
@@ -213,7 +235,7 @@ export const DrawerBody = ({
                             nodeId={`chats-${caseItem._id}-all`}
                             label="Chats"
                           >
-                            {caseItem.chats.map((chat: any, idx: number) => {
+                            {caseItem.chats.map((chat: IChat, idx: number) => {
                               return (
                                 <AppLink
                                   key={chat._id}
@@ -247,7 +269,7 @@ export const DrawerBody = ({
                               label="Generate Documents"
                             >
                               {caseItem.generatedDocuments.map(
-                                (genDoc: any) => {
+                                (genDoc: IGeneratedDocument) => {
                                   return (
                                     <AppLink
                                       key={`generated-documents-${genDoc._id}`}

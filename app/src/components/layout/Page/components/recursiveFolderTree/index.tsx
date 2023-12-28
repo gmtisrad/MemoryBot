@@ -2,9 +2,10 @@ import { ArticleOutlined } from '@mui/icons-material';
 import { AppLink } from '../../../../shared/AppLink';
 import { StyledTreeItem } from '../../styled';
 import { NestableSubTreeItemLabel } from '../nestableSubTreeItemLabel';
+import { IDocument, IFolder } from '../../../../../types/app';
 
 interface RecursiveFolderTreeProps {
-  folder: any;
+  folder: IFolder;
 }
 
 export const RecursiveFolderTree = ({ folder }: RecursiveFolderTreeProps) => {
@@ -23,10 +24,10 @@ export const RecursiveFolderTree = ({ folder }: RecursiveFolderTreeProps) => {
           />
         }
       >
-        {folder.folders.map((subFolder: any) => (
+        {folder.folders.map((subFolder: IFolder) => (
           <RecursiveFolderTree key={subFolder._id} folder={subFolder} />
         ))}
-        {folder.documents.map((document: any) => (
+        {folder.documents.map((document: IDocument) => (
           <AppLink
             key={document._id}
             href={`/cases/${folder.caseId}/folders/${folder._id}/documents/${document._id}`}
