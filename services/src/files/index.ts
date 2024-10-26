@@ -11,9 +11,9 @@ import {
   insertDocumentEntry,
 } from '../db/helpers';
 import { splitBufferByToken, splitTextByToken } from '../langchain/documents';
-import { recursiveSummarizeBuffer } from '../llm/helpers';
+import { recursiveSummarizeBuffer } from '../openAI/helpers';
 import { embedAndStore } from '../langchain/milvus';
-import { getCase } from '../cases/helpers';
+import { getCase } from '../projects/helpers';
 
 export const filesRouter = express.Router();
 
@@ -75,7 +75,7 @@ filesRouter.post('/upload', getUpload().single('file'), async (req, res) => {
     });
 
     await embedAndStore({
-      collection: `case_${caseId}`,
+      collection: `project_${caseId}`,
       documents: [...contextualizedChunks, ...summaryChunks],
     });
 

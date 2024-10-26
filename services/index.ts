@@ -10,8 +10,8 @@ import { cleanStart as milvusCleanStart } from './src/vector_db/milvusInit';
 import { cleanStart as mongoCleanStart } from './src/db/mongoInit';
 import { usersRouter } from './src/users';
 import { partnerRouter } from './src/partner';
-import { casesRouter } from './src/cases';
-import { llmRouter } from './src/llm';
+import { casesRouter } from './src/projects';
+import { llmRouter } from './src/openAI';
 import { chatsRouter } from './src/chats';
 import { notesRouter } from './src/notes';
 

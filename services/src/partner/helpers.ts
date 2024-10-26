@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { createCompletion } from '../llm/helpers';
+import { createCompletion } from '../openAI/helpers';
 import { createEmbedding } from '../embedding/helpers';
 import {
   ICreateGeneratedDocumentArgs,

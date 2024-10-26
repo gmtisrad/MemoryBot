@@ -27,8 +27,6 @@ export const getOpenAiClient = () => {
     });
 
     _openAiClient = new OpenAIApi(configuration);
-
-    return _openAiClient;
   } else {
     return _openAiClient;
   }

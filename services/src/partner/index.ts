@@ -128,6 +128,69 @@ partnerRouter.post('/prompt', async (req, res) => {
   });
 });
 
+partnerRouter.post('/chat/mixtral/prompt', async (req, res) => {
+  const { prompt, userId, caseId, chatId } = req.body;
+
+  let relevantChatId = chatId;
+
+  if (!chatId) {
+    const chatNamePrompt = await getChatNamePrompt({
+      firstMessage: prompt,
+    });
+
+    const chatName = await promptGPT35Turbo({
+      prompt: chatNamePrompt,
+    });
+
+    const { chatId } = await createChat({
+      userId: new ObjectId(userId),
+      caseId: new ObjectId(caseId),
+      name: chatName,
+    });
+
+    relevantChatId = chatId;
+  }
+
+  await insertMessages({
+    chatId: new ObjectId(relevantChatId),
+    messages: [
+      {
+        _id: new ObjectId(),
+        isUser: true,
+        content: prompt,
+      },
+    ],
+  });
+
+  const { chat } = await getChat({
+    chatId: relevantChatId,
+  });
+
+  // const chatHistory = chat?.messages?.map(
+  //   (message: IMessage) => new ChatMessage(message?.content, 'chat'),
+  // );
+
+  const chainValues = await textSimilaritySearch({
+    collection: `case_${caseId}`,
+    query: prompt,
+  });
+
+  await insertMessages({
+    chatId: new ObjectId(relevantChatId),
+    messages: [
+      {
+        _id: new ObjectId(),
+        isUser: false,
+        content: chainValues?.text,
+      },
+    ],
+  });
+
+  res.json({
+    response: chainValues?.text,
+  });
+});
+
 partnerRouter.post('/chat/prompt', async (req, res) => {
   const { prompt, userId, caseId, chatId } = req.body;
 
